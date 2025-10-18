@@ -1,17 +1,67 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject IThemeService ThemeService
+@inject IDataService DataService
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@* 根據 ThemeService 的狀態，應用全域主題 *@
+<MudThemeProvider Theme="@ThemeService.CurrentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+@* 加上載入遮罩 *@
+<MudOverlay Visible="@DataService.IsLoading" DarkBackground="true" Absolute="true">
+    <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
+        <MudText Typo="Typo.h4" Color="Color.Secondary" Class="me-3">更新原價屋資訊中...</MudText>
+        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
+    </MudItem>
+</MudOverlay>
+
+<MudLayout Class="d-flex flex-column">
+    <MudAppBar>
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        組電腦小幫手
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_drawerOpen">
+        <MyNavMenu />
+    </MudDrawer>
+    <MudMainContent Class="d-flex flex-column flex-grow-1">
+        <MudContainer MaxWidth="MaxWidth.False" Class="flex-grow-1">
+            @if (!DataService.IsLoading)
+            {
+                @Body
+            }
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = false; // 側邊欄開關狀態
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    // 元件初始化時執行
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.LoadThemeAsync();
+        // 訂閱主題變更事件，當主題變更時，刷新此元件的 UI
+        ThemeService.OnChange += StateHasChanged;
+        // 訂閱 DataService 的狀態變更事件
+        DataService.OnStateChanged += StateHasChanged;
+        _ = DataService.SeedDataIfNeededAsync();
+
+        await base.OnInitializedAsync();
+    }
+
+    // 元件銷毀時執行
+    public void Dispose()
+    {
+        // 取消訂閱，防止記憶體洩漏
+        ThemeService.OnChange -= StateHasChanged;
+        DataService.OnStateChanged -= StateHasChanged;
+    }
+}
