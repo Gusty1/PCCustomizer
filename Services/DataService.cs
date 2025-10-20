@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using PCCustomizer.Data;
 using PCCustomizer.Models;
 using PCCustomizer.Models.DTOs;
+using PCCustomizer.Tools;
 using System.Diagnostics;
 
 namespace PCCustomizer.Services
@@ -12,7 +13,7 @@ namespace PCCustomizer.Services
     /// 取得商品資料的服務
     /// </summary>
     /// <seealso cref="IDataService" />
-    public class DataService(HttpClient httpClient, AppDbContext dbContext, ISnackbar snackbar) : IDataService
+    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, ISnackbar snackbar) : IDataService
     {
         private const string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
 
@@ -31,18 +32,22 @@ namespace PCCustomizer.Services
             try
             {
                 IsLoading = true;
+
+                using var scope = serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
                 // 確保資料庫和資料表結構都存在
                 await dbContext.Database.EnsureCreatedAsync();
 
-                //TODO 記得移除
-                return;
+                // TODO 記得移除
+                //return;
 
                 // 遵循「從下往上」的順序，清空所有資料
                 Debug.WriteLine("正在清空 Product 資料表...");
                 await dbContext.Product.ExecuteDeleteAsync();
-                Debug.WriteLine("正在清空 Subcategories 資料表...");
+                Debug.WriteLine("正在清空 Subcategory 資料表...");
                 await dbContext.Subcategory.ExecuteDeleteAsync();
-                Debug.WriteLine("正在清空 Categories 資料表...");
+                Debug.WriteLine("正在清空 Category 資料表...");
                 await dbContext.Category.ExecuteDeleteAsync();
 
                 Debug.WriteLine("所有相關資料表已清空，開始從網路獲取新資料...");
@@ -57,6 +62,7 @@ namespace PCCustomizer.Services
                 var categoriesForDb = new List<Category>();
                 Debug.WriteLine($"JSON 解析成功，包含 {parsedJson.Count} 個主分類。開始轉換為資料庫模型...");
 
+                var dataDict = await MyTools.ExtractAllGDataFromCoolPcAsync(httpClient);
                 foreach (var jsonCategory in parsedJson)
                 {
                     var newDbCategory = new Category
@@ -65,7 +71,6 @@ namespace PCCustomizer.Services
                         CategoryName = jsonCategory.CategoryName,
                         Summary = jsonCategory.Summary,
                     };
-
                     foreach (var jsonSubcategory in jsonCategory.Subcategories)
                     {
                         var newDbSubcategory = new Subcategory
@@ -74,19 +79,33 @@ namespace PCCustomizer.Services
                             SubcategoryName = jsonSubcategory.Name,
                         };
 
-                        foreach (var jsonProduct in jsonSubcategory.Products)
+                        for (int i = 0; i < jsonSubcategory.Products.Count; i++)
                         {
+                            // 1. 透過索引 i 取得當前的 jsonProduct 物件
+                            var jsonProduct = jsonSubcategory.Products[i];
+
+                            // 2. 後續的程式碼邏輯完全不變
+                            if (jsonProduct.Price == null) continue;
+
                             var newDbProduct = new Product
                             {
                                 SubcategoryName = newDbSubcategory.SubcategoryName,
                                 Index = jsonProduct.Index,
                                 Group = jsonProduct.Group,
                                 Brand = jsonProduct.Brand,
-                                Specs = jsonProduct?.Specs ?? [],
-                                Price = jsonProduct.Price,
-                                Markers = jsonProduct?.Markers ?? [],
-                                RawText = jsonProduct.RawText,
+                                Specs = (jsonProduct.Specs == null || jsonProduct.Specs.Count == 0) ? [] : jsonProduct.Specs,
+                                Price = jsonProduct.Price - (jsonProduct.Discount ?? 0),
+                                Markers = (jsonProduct.Markers == null || jsonProduct.Markers.Count == 0) ? [] : jsonProduct.Markers,
+                                RawText = MyTools.GetClearRawText(jsonProduct.RawText),
                             };
+                            if (newDbProduct.Markers.Any(item => item.Contains("image", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                newDbProduct.IamgeUrl = await MyTools.ExtractImageUrlFromPostAsync(httpClient, dataDict.GetValueOrDefault($"g{jsonCategory.CategoryId}"), i);
+                            }
+                            if (newDbProduct.Markers.Any(item => item.Contains("discussion", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                newDbProduct.ProductUrl = await MyTools.ExtractRedirectUrlFromLinkAsync(httpClient, dataDict.GetValueOrDefault($"g{jsonCategory.CategoryId}"), i);
+                            }
                             newDbSubcategory.Products.Add(newDbProduct);
                         }
                         newDbCategory.Subcategories.Add(newDbSubcategory);

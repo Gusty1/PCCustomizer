@@ -1,0 +1,103 @@
+﻿@inject IHardwareService HardwareService
+@implements IDisposable
+
+<MudDialog>
+    <TitleContent>
+        <MudText Color="Color.Primary" Typo="Typo.h6" Align="Align.Center">
+            我的電腦資訊
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (HardwareService.IsScanning)
+        {
+            <MudText>正在掃描硬體資訊，請稍候...</MudText>
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+        }
+        else if (HardwareService.CurrentComputerInfo is null)
+        {
+            <MudText Color="Color.Error" Align="Align.Center">無法獲取硬體資訊。</MudText>
+        }
+        else
+        {
+            var info = HardwareService.CurrentComputerInfo;
+            @if (info is not null)
+            {
+                @* --- 主要資訊表格 --- *@
+                <MudSimpleTable Dense="false" Hover="true" Bordered="true" Style="overflow-x: auto;">
+                    <tbody>
+                        <tr>
+                            <td><strong>主機板</strong></td>
+                            <td>@info.MotherboardManufacturer @info.MotherboardProduct</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CPU</strong></td>
+                            <td>@info.CpuName</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CPU 規格</strong></td>
+                            <td>@info.CpuCores 核心 / @info.CpuThreads 執行緒，最大時脈 @info.CpuMaxClockSpeedMhz MHz</td>
+                        </tr>
+                        <tr>
+                            <td><strong>記憶體總容量</strong></td>
+                            <td>@($"{info.TotalPhysicalMemoryGb:F2}") GB</td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+
+                @* --- 顯示卡資訊 --- *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">顯示卡資訊</MudText>
+                @foreach (var gpu in info.Gpus)
+                {
+                    <MudText><strong>型號:</strong> @gpu.Name</MudText>
+                    <MudText><strong>記憶體:</strong> @($"{gpu.AdapterRamGb:F2}") GB, <strong>驅動版本:</strong> @gpu.DriverVersion</MudText>
+                }
+                <MudDivider Class="my-2" />
+
+                @* --- 記憶體詳細資訊 --- *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">記憶體插槽</MudText>
+                @foreach (var (ram, index) in info.RamSticks.Select((value, i) => (value, i)))
+                {
+                    <MudText><strong>插槽 @(index + 1):</strong> @($"{ram.CapacityGb:F2}") GB, 速度 @ram.SpeedMhz MHz</MudText>
+                }
+                <MudDivider Class="my-2" />
+
+                @* --- 硬碟資訊 --- *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">儲存裝置</MudText>
+                @foreach (var disk in info.Disks)
+                {
+                    <MudText><strong>型號:</strong> @disk.Model</MudText>
+                    <MudText><strong>容量:</strong> @($"{disk.SizeGb:F2}") GB</MudText>
+                }
+            }
+            else
+            {
+                <MudText Color="Color.Error" Typo="Typo.subtitle1" Align="Align.Center">
+                    取得硬體資訊失敗
+                </MudText>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        @*也許以後用得到先留著*@
+        @*<MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="Copy">複製</MudButton>*@
+    </DialogActions>
+</MudDialog>
+
+@code {
+    //[CascadingParameter] 是一個特殊的屬性，它會自動從打開這個對話框的地方，把這個「遙控器」傳遞進來。
+    [CascadingParameter]
+    //IMudDialogInstance 是 MudBlazor 提供的一個服務，代表目前這個打開的對話框實例
+    private IMudDialogInstance MudDialog { get; set; }
+
+    // 在元件初始化時，訂閱服務
+    protected override void OnInitialized()
+    {
+        HardwareService.OnStateChanged += StateHasChanged;
+    }
+
+    // 元件被銷毀時，取消訂閱
+    public void Dispose()
+    {
+        HardwareService.OnStateChanged -= StateHasChanged;
+    }
+}

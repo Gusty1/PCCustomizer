@@ -19,6 +19,9 @@ namespace PCCustomizer.Models.DTOs
         [JsonProperty("price")]
         public int? Price { get; set; }
 
+        [JsonProperty("discount_amount")]
+        public int? Discount { get; set; }
+
         [JsonProperty("markers")]
         public List<string>? Markers { get; set; }
 

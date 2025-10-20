@@ -1,0 +1,113 @@
+﻿@using PCCustomizer.Models
+@inject IJSRuntime JSRuntime
+
+<MudItem Class="flex-grow-1">
+    @if (Subcategories is not null && Subcategories.Any())
+    {
+        <MudTabs Elevation="4" Rounded="true" ApplyEffectsToContainer="true" Outlined="false"
+                 Position="Position.Start" Border="true" PanelClass="pa-3" Centered="false"
+                 ActiveTabClass="border-solid border-2 mud-border-primary" ActivePanelIndexChanged="OnTabChanged">
+            @foreach (var subcategory in Subcategories)
+            {
+                <MudTabPanel Text="@subcategory.SubcategoryName" Class="flex-grow-1">
+                    <MudTable T="Product" Items="@subcategory.Products" Hover="true" Bordered="true"
+                              Filter="new Func<Product, bool>(FilterFunc)" Class="flex-grow-1"
+                              @bind-SelectedItem="selectedProduct" RowsPerPage="25">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">@subcategory.SubcategoryName</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="searchString" Placeholder="搜尋商品" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>
+                                <MudText Typo="Typo.subtitle1">
+                                    <strong>商品名稱</strong>
+                                </MudText>
+                            </MudTh>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<Product, object>(x => x.Price)">
+                                    <MudText Typo="Typo.subtitle1">
+                                        <strong>價格</strong>
+                                    </MudText>
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                <MudText Typo="Typo.subtitle1">
+                                    <strong>操作</strong>
+                                </MudText>
+                            </MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="商品名稱">
+                                <MudItem Class="d-flex align-center">
+                                    @{
+                                        var isHot = @context.Markers.Any(item => item.Contains("hot", StringComparison.OrdinalIgnoreCase));
+                                        var iconStyle = !isHot ? "visibility: hidden;" : null;
+                                    }
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Title="熱銷"
+                                             Color="Color.Secondary" Class="mr-1" Style="@iconStyle" />
+                                    <MudText Typo="Typo.body1">
+                                        @context.RawText<br>
+                                        <MudText Typo="Typo.body2" Color="Color.Tertiary">
+                                            @context.Group
+                                        </MudText>
+                                    </MudText>
+                                </MudItem>
+                            </MudTd>
+                            <MudTd DataLabel="價格">
+                                <MudText Typo="Typo.body1" Color="Color.Info">
+                                    @context.Price
+                                </MudText>
+                            </MudTd>
+                            <MudTd DataLabel="操作"></MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText Align="Align.Center" Class="pa-4" Color="Color.Error">
+                                查無符合條件的資料
+                            </MudText>
+                        </NoRecordsContent>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudItem>
+
+@code {
+    [Parameter]
+    public List<Subcategory> Subcategories { get; set; } = [];
+
+    private string searchString = "";
+    private Product? selectedProduct;
+
+    private async Task OnTabChanged(int newIndex)
+    {
+        // 清空搜尋字串和已選擇的項目
+        searchString = "";
+        selectedProduct = null;
+
+        // 呼叫在 index.html 中定義的 JavaScript 函式，scroll移回最上層
+        await JSRuntime.InvokeVoidAsync("scrollToTop");
+    }
+
+    // 實作搜尋功能
+    private bool FilterFunc(Product product)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (!string.IsNullOrEmpty(product.RawText) && product.RawText.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (!string.IsNullOrEmpty(product.Brand) && product.Brand.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (!string.IsNullOrEmpty(product.Group) && product.Group.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (product.Specs != null && product.Specs.Any(spec => spec.Contains(searchString, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return false;
+    }
+}

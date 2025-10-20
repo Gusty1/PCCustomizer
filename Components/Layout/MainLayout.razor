@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject IThemeService ThemeService
 @inject IDataService DataService
+@inject IHardwareService HardwareService
 
 @* 根據 ThemeService 的狀態，應用全域主題 *@
 <MudThemeProvider Theme="@ThemeService.CurrentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
@@ -15,6 +16,9 @@
     <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
         <MudText Typo="Typo.h4" Color="Color.Secondary" Class="me-3">更新原價屋資訊中...</MudText>
         <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
+    </MudItem>
+    <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
+        <MudText Typo="Typo.h6" Color="Color.Tertiary" Class="me-3">請耐心等待</MudText>
     </MudItem>
 </MudOverlay>
 
@@ -52,7 +56,10 @@
         ThemeService.OnChange += StateHasChanged;
         // 訂閱 DataService 的狀態變更事件
         DataService.OnStateChanged += StateHasChanged;
+        // 獲取商品資料
         _ = DataService.SeedDataIfNeededAsync();
+        // 獲取電腦資訊
+        _ = HardwareService.ScanComputerInfoAsync();
 
         await base.OnInitializedAsync();
     }

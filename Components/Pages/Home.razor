@@ -1,9 +1,120 @@
 ﻿@page "/"
+@inject IDataService DataService
+@inject ICategoryService CategoryService
+@using PCCustomizer.Models
+@implements IDisposable
 
-<MudText Typo="Typo.h6" Class="pt-4" GutterBottom="true">零件選購</MudText>
-<MudDivider />
+<MudPaper Class="d-flex flex-column" Style="height: 100%;" Elevation="0">
+    <MudText Typo="Typo.h6" Class="pt-4" GutterBottom="true">首頁</MudText>
+    <MudDivider />
 
-<PriceAlertText />
+    <PriceAlertText />
 
-Welcome to your new app.
+    <MudGrid Class="d-flex align-center my-2 flex-grow-1">
+        <MudItem>
+            <MudButton OnClick="UpdateData"
+                       Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       Disabled="@DataService.IsLoading">
+                <MudText>更新原價屋資料</MudText>
+            </MudButton>
+        </MudItem>
+        <MudItem>
+            @* bind-Value的值一定要大寫 *@
+            <MudSelect T="Category?" @bind-Value="SelectedCategory" Label="主分類" Placeholder="選擇主分類"
+                       AdornmentColor="Color.Primary" FitContent="false" Clearable="true"
+                       Variant="Variant.Outlined">
+                @if (categories is not null && categories.Any())
+                {
+                    @foreach (var category in categories)
+                    {
+                        <MudSelectItem T="Category?" Value="@category">
+                            @category.CategoryName
+                        </MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem>
+            @if (selectedCategory is not null)
+            {
+                <MudText Align="Align.Left" Typo="Typo.subtitle1">
+                    <strong>@SelectedCategory.Summary</strong>
+                </MudText>
+            }
+        </MudItem>
+        <MudItem Class="flex-grow-1 d-flex justify-end align-center">
+            @*TODO 補上菜單相關功能*@
+            <MudButton Variant="Variant.Filled">新增菜單</MudButton>
+            <MudItem Class="mx-2">
+                <MudSelect T="int?" @bind-Value="CurrentMenuId" Label="菜單" Variant="Variant.Filled">
+                    @* <MudSelectItem Value="test">1</MudSelectItem> *@
+                </MudSelect>
+            </MudItem>
+            <MudBadge Content="10"  Overlap="true" Bordered="true" Class="mx-6 my-4">
+                <MudButton Color="Color.Error" Variant="Variant.Filled" DropShadow="false">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCartCheckout" />
+                    當前菜單
+                </MudButton>
+            </MudBadge>
+        </MudItem>
+    </MudGrid>
 
+    <MudGrid Class="d-flex flex-grow-1 my-2">
+        <ProductContent Subcategories="@subcategories"/>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    private List<Category> categories = new();
+    private List<Subcategory> subcategories = new();
+    private List<Product> products = new();
+    private int? currentMenuId = null;
+    private int? CurrentMenuId
+    {
+        get => currentMenuId;
+        set
+        {
+            currentMenuId = value;
+        }
+    }
+    // 這是真正儲存值的私有欄位 (小寫開頭)
+    private Category? selectedCategory;
+    // 這是用來綁定 UI 的公有屬性 (大寫開頭)
+    private Category? SelectedCategory
+    {
+        get => selectedCategory;
+        set
+        {
+            selectedCategory = value;
+
+            if (selectedCategory is null)
+            {
+                subcategories = new List<Subcategory>();
+            }
+            else
+            {
+                subcategories = categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<Subcategory>();
+                subcategories.OrderBy(s => s.CategoryId);
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        DataService.OnStateChanged += StateHasChanged;
+        categories = await CategoryService.GetCategoriesWithDetailsAsync();
+    }
+
+    private async Task UpdateData()
+    {
+        SelectedCategory = null;
+        _ = DataService.SeedDataIfNeededAsync();
+        categories = await CategoryService.GetCategoriesWithDetailsAsync();
+    }
+
+    public void Dispose()
+    {
+        DataService.OnStateChanged -= StateHasChanged;
+    }
+}

@@ -22,5 +22,9 @@ namespace PCCustomizer.Models
         public List<string>? Markers { get; set; } = [];
 
         public string? RawText { get; set; }
+
+        public string? IamgeUrl { get; set; }
+
+        public string? ProductUrl { get; set; }
     }
 }

@@ -1,9 +1,12 @@
 @inherits PCCustomizer.Components.BaseComponent
+@inject IDialogService DialogService
 
 <MudGrid Class="d-flex align-center">
 
     <MudItem>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary">我的電腦</MudButton>
+        <MudButton @onclick="OpenComputerInfoDialogAsync" Variant="Variant.Filled" Color="Color.Primary">
+            我的電腦資訊
+        </MudButton>
     </MudItem>
 
     <MudItem Class="flex-grow-1">
@@ -19,3 +22,11 @@
     </MudItem>
 </MudGrid>
 
+@code {
+    private Task OpenComputerInfoDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        return DialogService.ShowAsync<ComputerInfoDialog>("MyComputerInfo Dialog", options);
+    }
+}

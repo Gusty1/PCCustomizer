@@ -23,6 +23,14 @@
         <a class="dismiss">🗙</a>
     </div>
 
+    <script>
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // 使用 'smooth' 可以讓滾動有平滑的動畫效果
+            });
+        }
+    </script>
     <script src="_framework/blazor.webview.js" autostart="false"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js?v=@(MudBlazor.Metadata.Version)"></script>
 
