@@ -47,16 +47,53 @@
             @*TODO 補上菜單相關功能*@
             <MudButton Variant="Variant.Filled">新增菜單</MudButton>
             <MudItem Class="mx-2">
-                <MudSelect T="int?" @bind-Value="CurrentMenuId" Label="菜單" Variant="Variant.Filled">
+                <MudSelect T="int?" @bind-Value="CurrentMenuId" Label="菜單" Variant="Variant.Filled" 
+                FitContent="false">
                     @* <MudSelectItem Value="test">1</MudSelectItem> *@
                 </MudSelect>
             </MudItem>
-            <MudBadge Content="10"  Overlap="true" Bordered="true" Class="mx-6 my-4">
-                <MudButton Color="Color.Error" Variant="Variant.Filled" DropShadow="false">
-                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCartCheckout" />
-                    當前菜單
-                </MudButton>
-            </MudBadge>
+            <div style="position: relative; display: inline-block;" 
+                 @onmouseenter="() => _popoverOpen = true"
+                 @onmouseleave="() => _popoverOpen = false">
+                <MudBadge Content="10" Overlap="true" Bordered="true">
+                    <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="TogglePopover">
+                        當前菜單
+                    </MudButton>
+                </MudBadge>
+                <MudPopover Open="@_popoverOpen"
+                            AnchorOrigin="Origin.BottomLeft"
+                            TransformOrigin="Origin.TopCenter"
+                            MaxHeight="500">
+                    <ChildContent>
+                        <MudPaper Class="pa-2">
+                            <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="false">
+                                <tbody>
+                                    <tr>
+                                        <td rowspan="2">
+                                            顯示卡asdsad
+                                        </td>
+                                        <td>
+                                            <MudText>酷炫的商品 A</MudText>
+                                        </td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <MudText>123</MudText>
+                                        </td>
+                                        <td>1</td>
+                                    </tr>
+                                </tbody>
+                            </MudSimpleTable>
+                            <MudDivider Class="my-2" />
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudSpacer />
+                                <MudText Typo="Typo.h6">總計: $1301</MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </ChildContent>
+                </MudPopover>
+            </div>
         </MudItem>
     </MudGrid>
 
@@ -99,11 +136,18 @@
             }
         }
     }
+    private bool _popoverOpen = false;
+
+    private void TogglePopover()
+    {
+        _popoverOpen = !_popoverOpen;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         DataService.OnStateChanged += StateHasChanged;
         categories = await CategoryService.GetCategoriesWithDetailsAsync();
+        await base.OnInitializedAsync();
     }
 
     private async Task UpdateData()

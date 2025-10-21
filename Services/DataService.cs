@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using Newtonsoft.Json;
 using PCCustomizer.Data;
@@ -9,19 +10,22 @@ using System.Diagnostics;
 
 namespace PCCustomizer.Services
 {
-    /// <summary>
-    /// 取得商品資料的服務
-    /// </summary>
-    /// <seealso cref="IDataService" />
-    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, ISnackbar snackbar) : IDataService
+    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, ISnackbar snackbar) : ObservableObject , IDataService
     {
-        private const string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
+        private readonly string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
 
         private bool _isLoading = false;
         public bool IsLoading
         {
             get => _isLoading;
-            private set { _isLoading = value; OnStateChanged?.Invoke(); }
+            private set
+            {
+                // 當值改變時，更新屬性並觸發 OnChange 事件通知 UI
+                if (SetProperty(ref _isLoading, value))
+                {
+                    OnStateChanged?.Invoke();
+                }
+            }
         }
         public event Action OnStateChanged;
 
@@ -33,10 +37,9 @@ namespace PCCustomizer.Services
             {
                 IsLoading = true;
 
+                // 確保資料庫和資料表結構都存在
                 using var scope = serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                // 確保資料庫和資料表結構都存在
                 await dbContext.Database.EnsureCreatedAsync();
 
                 // TODO 記得移除
@@ -62,7 +65,6 @@ namespace PCCustomizer.Services
                 var categoriesForDb = new List<Category>();
                 Debug.WriteLine($"JSON 解析成功，包含 {parsedJson.Count} 個主分類。開始轉換為資料庫模型...");
 
-                var dataDict = await MyTools.ExtractAllGDataFromCoolPcAsync(httpClient);
                 foreach (var jsonCategory in parsedJson)
                 {
                     var newDbCategory = new Category
@@ -92,20 +94,13 @@ namespace PCCustomizer.Services
                                 SubcategoryName = newDbSubcategory.SubcategoryName,
                                 Index = jsonProduct.Index,
                                 Group = jsonProduct.Group,
-                                Brand = jsonProduct.Brand,
-                                Specs = (jsonProduct.Specs == null || jsonProduct.Specs.Count == 0) ? [] : jsonProduct.Specs,
                                 Price = jsonProduct.Price - (jsonProduct.Discount ?? 0),
                                 Markers = (jsonProduct.Markers == null || jsonProduct.Markers.Count == 0) ? [] : jsonProduct.Markers,
                                 RawText = MyTools.GetClearRawText(jsonProduct.RawText),
+                                ImgUrl = jsonProduct.ImgUrl,
+                                ProductUrl = jsonProduct.ProductUrl,
+                                Details = jsonProduct.Details
                             };
-                            if (newDbProduct.Markers.Any(item => item.Contains("image", StringComparison.OrdinalIgnoreCase)))
-                            {
-                                newDbProduct.IamgeUrl = await MyTools.ExtractImageUrlFromPostAsync(httpClient, dataDict.GetValueOrDefault($"g{jsonCategory.CategoryId}"), i);
-                            }
-                            if (newDbProduct.Markers.Any(item => item.Contains("discussion", StringComparison.OrdinalIgnoreCase)))
-                            {
-                                newDbProduct.ProductUrl = await MyTools.ExtractRedirectUrlFromLinkAsync(httpClient, dataDict.GetValueOrDefault($"g{jsonCategory.CategoryId}"), i);
-                            }
                             newDbSubcategory.Products.Add(newDbProduct);
                         }
                         newDbCategory.Subcategories.Add(newDbSubcategory);

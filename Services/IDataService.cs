@@ -1,4 +1,7 @@
-﻿public interface IDataService
+﻿using PCCustomizer.Models;
+using System.ComponentModel;
+
+public interface IDataService : INotifyPropertyChanged
 {
     /// <summary>
     /// 表示目前是否正在載入資料。

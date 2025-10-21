@@ -10,12 +10,6 @@ namespace PCCustomizer.Models.DTOs
         [JsonProperty("group")]
         public string? Group { get; set; }
 
-        [JsonProperty("brand")]
-        public string? Brand { get; set; }
-
-        [JsonProperty("specs")]
-        public List<string>? Specs { get; set; }
-
         [JsonProperty("price")]
         public int? Price { get; set; }
 
@@ -27,5 +21,14 @@ namespace PCCustomizer.Models.DTOs
 
         [JsonProperty("raw_text")]
         public string? RawText { get; set; }
+
+        [JsonProperty("imgUrl")]
+        public string? ImgUrl { get; set; }
+
+        [JsonProperty("productUrl")]
+        public string? ProductUrl { get; set; }
+
+        [JsonProperty("details")]
+        public List<string>? Details { get; set; }
     }
 }

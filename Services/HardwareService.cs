@@ -1,11 +1,11 @@
-﻿// 檔案路徑: YourProject/Services/HardwareService.cs
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using PCCustomizer.Models.Hardware;
 using System.Diagnostics;
 using System.Management;
 
 namespace PCCustomizer.Services
 {
-    public class HardwareService : IHardwareService
+    public class HardwareService : ObservableObject, IHardwareService
     {
         private ComputerInfo _cachedInfo;
         public ComputerInfo CurrentComputerInfo => _cachedInfo;
@@ -16,14 +16,15 @@ namespace PCCustomizer.Services
             get => _isScanning;
             private set
             {
-                _isScanning = value;
-                // 當狀態改變時，立刻發出通知
-                NotifyStateChanged();
+                // 當值改變時，更新屬性並觸發 OnChange 事件通知 UI
+                if (SetProperty(ref _isScanning, value))
+                {
+                    OnStateChanged?.Invoke();
+                }
             }
         }
 
         public event Action OnStateChanged;
-        private void NotifyStateChanged() => OnStateChanged?.Invoke();
 
         public async Task ScanComputerInfoAsync()
         {

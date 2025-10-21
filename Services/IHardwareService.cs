@@ -1,8 +1,9 @@
 ﻿using PCCustomizer.Models.Hardware;
+using System.ComponentModel;
 
 namespace PCCustomizer.Services
 {
-    public interface IHardwareService
+    public interface IHardwareService : INotifyPropertyChanged
     {
         ComputerInfo CurrentComputerInfo { get; }
 

@@ -13,18 +13,16 @@ namespace PCCustomizer.Models
 
         public string? Group { get; set; }
 
-        public string? Brand { get; set; }
-
-        public List<string>? Specs { get; set; } = [];
-
         public int? Price { get; set; }
 
         public List<string>? Markers { get; set; } = [];
 
         public string? RawText { get; set; }
 
-        public string? IamgeUrl { get; set; }
+        public string? ImgUrl { get; set; }
 
         public string? ProductUrl { get; set; }
+
+        public List<string>? Details { get; set; } = [];
     }
 }

@@ -1,13 +1,31 @@
-﻿// 檔案路徑: YourProject/Services/CategoryService.cs
-using Microsoft.EntityFrameworkCore; // 需要引用這個來使用 Include 和 ThenInclude
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 using PCCustomizer.Data;
 using PCCustomizer.Models;
+using PCCustomizer.Tools;
 using System.Diagnostics;
 
 namespace PCCustomizer.Services
 {
-    public class CategoryService(AppDbContext dbContext) : ICategoryService
+    public class CategoryService(AppDbContext dbContext) : ObservableObject, ICategoryService
     {
+
+        private bool _isLoading = false;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set
+            {
+                // 當值改變時，更新屬性並觸發 OnChange 事件通知 UI
+                if (SetProperty(ref _isLoading, value))
+                {
+                    OnStateChanged?.Invoke();
+                }
+            }
+        }
+
+        public event Action OnStateChanged;
+
         public async Task<List<Category>> GetCategoriesWithDetailsAsync()
         {
             try
@@ -26,7 +44,7 @@ namespace PCCustomizer.Services
             {
                 Debug.WriteLine($"查詢分類資料時發生錯誤: {ex.Message}");
                 // 如果查詢失敗，回傳一個空的列表，避免程式崩潰
-                return new List<Category>();
+                return [];
             }
         }
     }

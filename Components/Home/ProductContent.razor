@@ -1,5 +1,7 @@
 ﻿@using PCCustomizer.Models
 @inject IJSRuntime JSRuntime
+@inject ICategoryService CategoryService
+@implements IDisposable
 
 <MudItem Class="flex-grow-1">
     @if (Subcategories is not null && Subcategories.Any())
@@ -10,9 +12,8 @@
             @foreach (var subcategory in Subcategories)
             {
                 <MudTabPanel Text="@subcategory.SubcategoryName" Class="flex-grow-1">
-                    <MudTable T="Product" Items="@subcategory.Products" Hover="true" Bordered="true"
-                              Filter="new Func<Product, bool>(FilterFunc)" Class="flex-grow-1"
-                              @bind-SelectedItem="selectedProduct" RowsPerPage="25">
+                    <MudTable T="Product" Items="@subcategory.Products" Hover="true" Bordered="true" Striped="false"
+                              Filter="new Func<Product, bool>(FilterFunc)" Class="flex-grow-1" RowsPerPage="25">
                         <ToolBarContent>
                             <MudText Typo="Typo.h6">@subcategory.SubcategoryName</MudText>
                             <MudSpacer />
@@ -34,33 +35,98 @@
                             </MudTh>
                             <MudTh>
                                 <MudText Typo="Typo.subtitle1">
-                                    <strong>操作</strong>
+                                    <strong></strong>
                                 </MudText>
                             </MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="商品名稱">
-                                <MudItem Class="d-flex align-center">
-                                    @{
-                                        var isHot = @context.Markers.Any(item => item.Contains("hot", StringComparison.OrdinalIgnoreCase));
-                                        var iconStyle = !isHot ? "visibility: hidden;" : null;
-                                    }
-                                    <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Title="熱銷"
-                                             Color="Color.Secondary" Class="mr-1" Style="@iconStyle" />
-                                    <MudText Typo="Typo.body1">
-                                        @context.RawText<br>
-                                        <MudText Typo="Typo.body2" Color="Color.Tertiary">
-                                            @context.Group
-                                        </MudText>
-                                    </MudText>
-                                </MudItem>
+                                <MudStack Spacing="0">
+                                    <MudItem>
+                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                            <MudItem>
+                                                <MudStack Spacing="0">
+                                                    <MudItem>
+                                                        @if (context.ProductUrl is not null)
+                                                        {
+                                                            <MudLink Typo="Typo.subtitle1" Href="@context.ProductUrl"
+                                                                     Color="Color.Info" Target="_blank">
+                                                                @context.RawText
+                                                            </MudLink>
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudText Color="Color.Primary" Typo="Typo.subtitle1">@context.RawText</MudText>
+                                                        }
+                                                    </MudItem>
+                                                    <MudItem>
+                                                        @if (!string.IsNullOrEmpty(context.Group))
+                                                        {
+                                                            <MudText Typo="Typo.body2" Color="Color.Tertiary">
+                                                                @context.Group
+                                                            </MudText>
+                                                        }
+                                                    </MudItem>
+                                                </MudStack>
+                                            </MudItem>
+                                            <MudItem>
+                                                @{
+                                                    var isHot = @context.Markers.Any(item => item.Contains("hot", StringComparison.OrdinalIgnoreCase));
+                                                    var iconStyle = !isHot ? "visibility: hidden;" : null;
+                                                }
+                                                <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Title="熱銷"
+                                                         Color="Color.Secondary" Style="@iconStyle" />
+                                            </MudItem>
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem Class="mt-2">
+                                        <MudStack Row="true" AlignItems="AlignItems.Start">
+                                            @if (@context.ImgUrl is not null)
+                                            {
+                                                <MudItem Class="mr-4 flex-shrink-0">
+                                                    <div @onmouseenter="@(() => hoveredProductIndex = context.Index)"
+                                                         @onmouseleave="@(() => hoveredProductIndex = null)"
+                                                         style="position: relative; display: inline-block;">
+
+                                                        <!-- 1. 將 MudImage 包在 MudLink 中，使其可以點擊 -->
+                                                        <MudLink Href="@context.ImgUrl" Target="_blank" Underline="Underline.None">
+                                                            <MudImage Src="@context.ImgUrl" Alt="@context.RawText" Height="200"
+                                                                      Class="rounded-lg" ObjectFit="ObjectFit.Contain" />
+                                                        </MudLink>
+
+                                                        <!-- 2. 修改 Popover 的定位屬性，讓它從左邊彈出 -->
+                                                        <MudPopover Open="@(hoveredProductIndex == context.Index)"
+                                                                    AnchorOrigin="Origin.CenterLeft"
+                                                                    TransformOrigin="Origin.CenterRight"
+                                                                    Class="mr-2">
+                                                            <ChildContent>
+                                                                <MudPaper Elevation="3" Class="pa-2 rounded-lg">
+                                                                    <MudImage Src="@context.ImgUrl" Alt="@context.RawText" Width="400" Class="rounded-lg" />
+                                                                </MudPaper>
+                                                            </ChildContent>
+                                                        </MudPopover>
+                                                    </div>
+                                                </MudItem>
+                                            }
+                                            @if (@context.Details is not null && @context.Details.Any())
+                                            {
+                                                <MudStack Spacing="0">
+                                                    @foreach (var detail in @context.Details)
+                                                    {
+                                                        <MudText Typo="Typo.subtitle2" Color="Color.Default">@detail</MudText>
+                                                    }
+                                                </MudStack>
+                                            }
+                                        </MudStack>
+                                    </MudItem>
+                                </MudStack>
                             </MudTd>
                             <MudTd DataLabel="價格">
-                                <MudText Typo="Typo.body1" Color="Color.Info">
+                                <MudText Typo="Typo.subtitle1" Color="Color.Info">
                                     @context.Price
                                 </MudText>
                             </MudTd>
-                            <MudTd DataLabel="操作"></MudTd>
+                            <MudTd DataLabel=""></MudTd>
                         </RowTemplate>
                         <NoRecordsContent>
                             <MudText Align="Align.Center" Class="pa-4" Color="Color.Error">
@@ -78,17 +144,22 @@
 </MudItem>
 
 @code {
+    private string? hoveredProductIndex = null;
     [Parameter]
     public List<Subcategory> Subcategories { get; set; } = [];
 
     private string searchString = "";
-    private Product? selectedProduct;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CategoryService.OnStateChanged += StateHasChanged;
+        await base.OnInitializedAsync();
+    }
 
     private async Task OnTabChanged(int newIndex)
     {
         // 清空搜尋字串和已選擇的項目
         searchString = "";
-        selectedProduct = null;
 
         // 呼叫在 index.html 中定義的 JavaScript 函式，scroll移回最上層
         await JSRuntime.InvokeVoidAsync("scrollToTop");
@@ -101,13 +172,17 @@
             return true;
         if (!string.IsNullOrEmpty(product.RawText) && product.RawText.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (!string.IsNullOrEmpty(product.Brand) && product.Brand.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
         if (!string.IsNullOrEmpty(product.Group) && product.Group.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (product.Specs != null && product.Specs.Any(spec => spec.Contains(searchString, StringComparison.OrdinalIgnoreCase)))
+        if (product.Details != null && product.Details.Any(item => item.Contains(searchString, StringComparison.OrdinalIgnoreCase)))
             return true;
 
         return false;
+    }
+
+    // 元件被銷毀時，取消訂閱
+    public void Dispose()
+    {
+        CategoryService.OnStateChanged -= StateHasChanged;
     }
 }
