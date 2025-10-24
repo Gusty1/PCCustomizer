@@ -69,6 +69,11 @@ h1:focus {
     display: none;
 }
 
+/*由於首頁左邊tab怎麼設定都弄不好，所以強制改CSS*/
+.d-inline-block:has(.mud-tab) {
+    width: 100% !important;
+}
+
 @supports (-webkit-touch-callout: none) {
     .status-bar-safe-area {
         display: flex;

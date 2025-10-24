@@ -1,4 +1,5 @@
 ﻿using PCCustomizer.Models;
+using PCCustomizer.Models.DTOs;
 using System.ComponentModel;
 
 namespace PCCustomizer.Services
@@ -14,6 +15,6 @@ namespace PCCustomizer.Services
         /// <summary>
         /// (異步) 獲取所有主分類，並包含其下的子分類和產品。
         /// </summary>
-        Task<List<Category>> GetCategoriesWithDetailsAsync();
+        Task<List<MyCategoryDTO>> GetCategoriesWithDetailsAsync(MenuCategory menuCategory);
     }
 }

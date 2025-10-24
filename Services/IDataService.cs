@@ -1,5 +1,4 @@
-﻿using PCCustomizer.Models;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 public interface IDataService : INotifyPropertyChanged
 {

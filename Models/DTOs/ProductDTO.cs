@@ -2,6 +2,9 @@
 
 namespace PCCustomizer.Models.DTOs
 {
+    /// <summary>
+    /// 獲取json檔案中的商品資料
+    /// </summary>
     public class ProductDTO
     {
         [JsonProperty("index")]
@@ -22,10 +25,13 @@ namespace PCCustomizer.Models.DTOs
         [JsonProperty("raw_text")]
         public string? RawText { get; set; }
 
-        [JsonProperty("imgUrl")]
+        [JsonProperty("full_text")]
+        public string? FullText { get; set; }
+
+        [JsonProperty("img_url")]
         public string? ImgUrl { get; set; }
 
-        [JsonProperty("productUrl")]
+        [JsonProperty("product_url")]
         public string? ProductUrl { get; set; }
 
         [JsonProperty("details")]

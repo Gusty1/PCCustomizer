@@ -87,4 +87,12 @@
       <Folder Include="wwwroot\css\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <MauiImage Include="wwwroot\images\no_image.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="wwwroot\images\no_image.png" />
+    </ItemGroup>
+
 </Project>

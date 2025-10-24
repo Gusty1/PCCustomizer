@@ -1,16 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor;
 using Newtonsoft.Json;
 using PCCustomizer.Data;
 using PCCustomizer.Models;
 using PCCustomizer.Models.DTOs;
-using PCCustomizer.Tools;
 using System.Diagnostics;
 
 namespace PCCustomizer.Services
 {
-    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, ISnackbar snackbar) : ObservableObject , IDataService
+    /// <summary>
+    /// 程式啟動時取得原價屋json並寫入資料庫的實作
+    /// </summary>
+    /// <seealso cref="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" />
+    /// <seealso cref="IDataService" />
+    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, INotificationService notificationService) : ObservableObject , IDataService
     {
         private readonly string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
 
@@ -70,7 +73,7 @@ namespace PCCustomizer.Services
                     var newDbCategory = new Category
                     {
                         CategoryId = int.Parse(jsonCategory.CategoryId),
-                        CategoryName = jsonCategory.CategoryName,
+                        CategoryName = jsonCategory.CategoryName.Trim(),
                         Summary = jsonCategory.Summary,
                     };
                     foreach (var jsonSubcategory in jsonCategory.Subcategories)
@@ -78,15 +81,13 @@ namespace PCCustomizer.Services
                         var newDbSubcategory = new Subcategory
                         {
                             CategoryId = newDbCategory.CategoryId,
-                            SubcategoryName = jsonSubcategory.Name,
+                            SubcategoryName = jsonSubcategory.Name.Trim(),
                         };
 
                         for (int i = 0; i < jsonSubcategory.Products.Count; i++)
                         {
-                            // 1. 透過索引 i 取得當前的 jsonProduct 物件
                             var jsonProduct = jsonSubcategory.Products[i];
 
-                            // 2. 後續的程式碼邏輯完全不變
                             if (jsonProduct.Price == null) continue;
 
                             var newDbProduct = new Product
@@ -96,7 +97,8 @@ namespace PCCustomizer.Services
                                 Group = jsonProduct.Group,
                                 Price = jsonProduct.Price - (jsonProduct.Discount ?? 0),
                                 Markers = (jsonProduct.Markers == null || jsonProduct.Markers.Count == 0) ? [] : jsonProduct.Markers,
-                                RawText = MyTools.GetClearRawText(jsonProduct.RawText),
+                                RawText = jsonProduct.RawText.Trim(),
+                                FullText = jsonProduct.FullText.Trim(),
                                 ImgUrl = jsonProduct.ImgUrl,
                                 ProductUrl = jsonProduct.ProductUrl,
                                 Details = jsonProduct.Details
@@ -121,8 +123,7 @@ namespace PCCustomizer.Services
                 {
                     Debug.WriteLine($"--> 內部錯誤訊息: {ex.InnerException.Message}");
                 }
-                snackbar.Add(@"資料更新失敗，請檢查網路連線或稍後再試，
-                                若還有問題請聯絡我", Severity.Error);
+                notificationService.ShowError(@"資料更新失敗，請檢查網路連線或稍後再試，若還有問題請聯絡我");
             }
             finally
             {

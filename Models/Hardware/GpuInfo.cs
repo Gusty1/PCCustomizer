@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace PCCustomizer.Models.Hardware
 {
+    /// <summary>
+    /// GPU相關模型
+    /// </summary>
     public class GpuInfo
     {
         public string Name { get; set; }

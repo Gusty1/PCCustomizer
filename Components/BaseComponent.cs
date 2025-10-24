@@ -1,21 +1,20 @@
 ﻿using Microsoft.AspNetCore.Components;
-using MudBlazor;
+using PCCustomizer.Services;
+using System.Diagnostics;
 
 namespace PCCustomizer.Components
 {
-    // 將 internal 改為 public，確保其他元件可以繼承
+    /// <summary>
+    /// razor的共用方法
+    /// </summary>
+    /// <seealso cref="Microsoft.AspNetCore.Components.ComponentBase" />
     public abstract class BaseComponent : ComponentBase
     {
-        // 在這裡注入所有常用的服務
-
-        //mudblazor的snackbar
+        // 注入通知服務
         [Inject]
-        protected ISnackbar Snackbar { get; set; } = default!;
+        protected INotificationService NotificationService { get; set; } = default!;
 
-        // =========================================================
-        // 新增共用方法：OpenExternalLink
-        // 設為 protected 讓所有繼承元件都能使用
-        // =========================================================
+        // 開啟連結
         protected async Task OpenExternalLink(string url)
         {
             if (string.IsNullOrEmpty(url)) return;
@@ -26,13 +25,14 @@ namespace PCCustomizer.Components
                     bool success = await Launcher.OpenAsync(url);
                     if (!success)
                     {
-                        Snackbar?.Add($"無法開啟連結：{url}", Severity.Warning);
+                        NotificationService.ShowError($"無法開啟連結");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Snackbar?.Add($"開啟連結時發生錯誤：{ex.Message}", Severity.Error);
+                Debug.WriteLine($"開啟連結時發生錯誤", ex.Message);
+                NotificationService.ShowError($"開啟連結時發生錯誤");
             }
         }
     }

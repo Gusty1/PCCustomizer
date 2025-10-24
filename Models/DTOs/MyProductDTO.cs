@@ -1,18 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
 
-namespace PCCustomizer.Models
+namespace PCCustomizer.Models.DTOs
 {
     /// <summary>
-    /// table Product 設定
+    /// 首頁我的商品資料
     /// </summary>
-    public class Product
+    public class MyProductDTO
     {
-        [Key]
-        public int Id { get; set; }
+        public required string Index { get; set; }
 
         public required string SubcategoryName { get; set; }
-
-        public required string Index { get; set; }
 
         public string? Group { get; set; }
 
@@ -29,5 +26,8 @@ namespace PCCustomizer.Models
         public string? ProductUrl { get; set; }
 
         public List<string>? Details { get; set; } = [];
+
+        //記錄我目前的商品數量
+        public int Qty { get; set; }
     }
 }

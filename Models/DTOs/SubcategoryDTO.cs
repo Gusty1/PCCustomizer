@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 
 namespace PCCustomizer.Models.DTOs 
 {
+    /// <summary>
+    /// 獲取json檔案中的子目錄資料
+    /// </summary>
     public class SubcategoryDTO
     {
         [JsonProperty("name")]

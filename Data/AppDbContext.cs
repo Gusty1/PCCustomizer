@@ -12,11 +12,13 @@ namespace PCCustomizer.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Product> Product { get; set; }
+
         public DbSet<Category> Category { get; set; }
+
         public DbSet<Subcategory> Subcategory { get; set; }
 
+        public DbSet<MenuCategory> MenuCategory { get; set; }
 
-        //public DbSet<MenuCategory> MenuCategory { get; set; }
-        //public DbSet<Menu> Menu { get; set; }
+        public DbSet<MenuProduct> Menu { get; set; }
     }
 }

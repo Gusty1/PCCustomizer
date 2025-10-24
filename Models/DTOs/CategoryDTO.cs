@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 
-namespace PCCustomizer.Models.DTOs // 請確認這是你專案的正確名稱
+namespace PCCustomizer.Models.DTOs
 {
+    /// <summary>
+    /// 獲取json檔案中的主目錄資料
+    /// </summary>
     public class CategoryDTO
     {
         [JsonProperty("category_id")]

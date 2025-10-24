@@ -1,10 +1,10 @@
-﻿using PCCustomizer.Models.DTOs;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace PCCustomizer.Models
 {
+    /// <summary>
+    /// table Category 設定
+    /// </summary>
     public class Category
     {
         [Key]

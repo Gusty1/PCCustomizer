@@ -5,6 +5,11 @@ using System.Management;
 
 namespace PCCustomizer.Services
 {
+    /// <summary>
+    /// 取得電腦硬體資訊的服務實作
+    /// </summary>
+    /// <seealso cref="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" />
+    /// <seealso cref="PCCustomizer.Services.IHardwareService" />
     public class HardwareService : ObservableObject, IHardwareService
     {
         private ComputerInfo _cachedInfo;

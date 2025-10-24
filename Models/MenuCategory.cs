@@ -2,21 +2,24 @@
 
 namespace PCCustomizer.Models
 {
+    /// <summary>
+    /// table MenuCategory 設定
+    /// </summary>
     public class MenuCategory
     {
         [Key]
-        public required int Id { get; set; }
+        public int Id { get; set; }
 
         public required string Name { get; set; }
 
-        public DateTime? ReviseDate { get; set; }
+        public DateTime? ReviseDate { get; set; } = DateTime.Now;
 
-        public required bool IsSend {  get; set; }
+        public bool IsSend { get; set; } = false;
 
         public string? HtmUrl { get; set; }
 
         public string? PngUrl { get; set; }
 
-        public List<Menu>? Menus { get; set; } = [];
+        public List<MenuProduct>? Menus { get; set; } = [];
     }
 }

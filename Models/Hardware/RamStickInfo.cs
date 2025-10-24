@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace PCCustomizer.Models.Hardware
 {
+    /// <summary>
+    /// RAM相關模型
+    /// </summary>
     public class RamStickInfo
     {
         public double CapacityGb { get; set; }

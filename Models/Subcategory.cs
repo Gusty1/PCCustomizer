@@ -2,6 +2,9 @@
 
 namespace PCCustomizer.Models 
 {
+    /// <summary>
+    /// table Subcategory 設定
+    /// </summary>
     public class Subcategory
     {
         [Key]

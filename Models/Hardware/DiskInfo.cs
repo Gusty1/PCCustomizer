@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace PCCustomizer.Models.Hardware
 {
+    /// <summary>
+    /// 硬碟資訊相關模型
+    /// </summary>
     public class DiskInfo
     {
         public string Model { get; set; }
