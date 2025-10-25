@@ -53,7 +53,7 @@ namespace PCCustomizer.Services
                         var myProductDTOList = new List<MyProductDTO>();
                         foreach (var product in subcategory.Products)
                         {
-                            var findProduct = menuCategory != null ? menuCategory.Menus.FirstOrDefault(x => x.ProductName == product.RawText) : null;
+                            var findProduct = menuCategory != null ? menuCategory.MenuProducts.FirstOrDefault(x => x.ProductName == product.RawText) : null;
                             myProductDTOList.Add(new MyProductDTO
                             {
                                 Index = product.Index,
@@ -69,7 +69,8 @@ namespace PCCustomizer.Services
                                 Qty = findProduct == null ? 0 : findProduct.Qty
                             });
                         }
-                        var subcategoryQty = menuCategory != null ? menuCategory.Menus.Where(x => x.SubcategoryName == subcategory.SubcategoryName).Count() : 0;
+                        var subcategoryQty = menuCategory != null ? menuCategory.MenuProducts.Where(x => x.SubcategoryName == subcategory.SubcategoryName)
+                            .Sum(k => k.Qty) : 0;
                         mySubcategoryDTOList.Add(new MySubcategoryDTO
                         {
                             CategoryId = subcategory.CategoryId,

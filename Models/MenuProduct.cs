@@ -24,8 +24,6 @@ namespace PCCustomizer.Models
 
         public int ProductPrice { get; set; }
 
-        public int Seq { get; set; }
-
         public int Qty { get; set; }
     }
 }

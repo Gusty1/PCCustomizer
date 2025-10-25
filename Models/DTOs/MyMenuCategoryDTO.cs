@@ -1,13 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
 
-namespace PCCustomizer.Models
+namespace PCCustomizer.Models.DTOs
 {
-    /// <summary>
-    /// table MenuCategory 設定
-    /// </summary>
-    public class MenuCategory
+    public class MyMenuCategoryDTO
     {
-        [Key]
         public int Id { get; set; }
 
         public required string Name { get; set; }
@@ -20,6 +16,6 @@ namespace PCCustomizer.Models
 
         public string? PngUrl { get; set; }
 
-        public List<MenuProduct>? MenuProducts { get; set; } = [];
+        public List<Dictionary<string, List<MenuProduct>>> MyMenuProducts { get; set; } = [];
     }
 }

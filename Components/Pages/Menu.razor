@@ -1,0 +1,315 @@
+﻿@page "/menu"
+@using PCCustomizer.Models
+@using PCCustomizer.Models.DTOs
+@inject IMenuService MenuService
+@inject IDialogService DialogService
+@inherits BaseComponent
+@implements IDisposable
+
+<MudText Typo="Typo.h6" GutterBottom="true">我的菜單</MudText>
+<MudDivider />
+
+<PriceAlertText />
+
+<MudItem Class="d-flex align-center flex-grow-1">
+    <MudButton Variant="Variant.Filled" Color="Color.Default" Class="ma-2" OnClick="AddNewCategory">
+        <MudIcon Icon="@Icons.Material.Filled.Add" />
+        新增菜單
+    </MudButton>
+    @if (!MyAllMenu.Any())
+    {
+        <MudItem Class="d-flex align-center flex-grow-1">
+            <MudText Typo="Typo.h6" Color="Color.Secondary">尚未建立任何菜單</MudText>
+        </MudItem>
+    }
+
+    <MudAlert Severity="Severity.Warning" Class="ml-auto">
+        <MudText Typo="Typo.subtitle1">
+            生成估價單屬於實驗性功能，盡可能跟官方很像，但不保證可以套用到原價屋網站
+        </MudText>
+    </MudAlert>
+</MudItem>
+
+<MudPaper Class="my-2 d-flex flex-grow-1 flex-wrap">
+    @foreach (var category in MyAllMenu)
+    {
+        <MudItem Class="mb-2 ma-2">
+            <MudCard Elevation="4" Outlined="true" Style="width: 910px; height: 730px;overflow: auto;">
+                <MudCardHeader>
+                    <MudItem Class="d-flex align-center flex-grow-1">
+                        @if (currentlyEditingCardId == category.Id)
+                        {
+                            <MudTextField @bind-Value="category.Name" Label="菜單名稱"
+                                             Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        }
+                        else
+                        {
+                            <MudText Class="flex-grow-1" Typo="Typo.h6">@category.Name</MudText>
+                        }
+                        @if (currentlyEditingCardId == category.Id)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Success" OnClick="@(() => SaveChanges(category))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" OnClick="@(() => CancelEdit(category))" />
+                        }
+                        else
+                        {
+                            @if (category.IsSend)
+                            {
+                                <MudTooltip Text="開啟網頁">
+                                    <MudIconButton Icon="@Icons.Material.Filled.WebAsset" Color="Color.Tertiary"
+                                                   OnClick="@(() => OpenExternalLink(category.HtmUrl))" />
+                                </MudTooltip>
+                                <MudTooltip Text="開啟圖片">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Image" Color="Color.Tertiary"
+                                                   OnClick="@(() => OpenExternalLink(category.PngUrl))" />
+                                </MudTooltip>
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => StartEditing(category))"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteMenu(category))" />
+                        }
+                    </MudItem>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (category is not null && category.MyMenuProducts.Any())
+                    {
+                        <MudSimpleTable Dense="true" Hover="false" Bordered="true"
+                                        Striped="false" FixedHeader="true"
+                                        style="height: 480px;overflow:auto">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <MudText Typo="Typo.body1">類別</MudText>
+                                    </th>
+                                    <th>
+                                        <MudText Typo="Typo.body1">商品</MudText>
+                                    </th>
+                                    <th>
+                                        <MudText Typo="Typo.body1">價格</MudText>
+                                    </th>
+                                    <th>
+                                        <MudText Typo="Typo.body1">數量</MudText>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var myMenu in category.MyMenuProducts)
+                                {
+                                    @foreach (var (key, value) in myMenu)
+                                    {
+                                        @for (int i = 0; i < value.Count; i++)
+                                        {
+                                            var item = value[i]; // 把值提前，razor的渲染機制必須要這樣做
+                                            @if (i == 0)
+                                            {
+                                                <tr>
+                                                    <td rowspan="@value.Count">
+                                                        <MudText Typo="Typo.body1">
+                                                            @key
+                                                        </MudText>
+                                                    </td>
+                                                    <td>
+                                                        <MudText Typo="Typo.body1">
+                                                            @item.ProductName
+                                                        </MudText>
+                                                    </td>
+                                                    <td>
+                                                        <MudText Typo="Typo.body1">
+                                                            @item.ProductPrice
+                                                        </MudText>
+                                                    </td>
+                                                    <td>
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                                            <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width:80px;" Step="1" Min="1"
+                                                                             @bind-Value="item.Qty" Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" />
+                                                            <MudIconButton Variant="Variant.Filled" Color="Color.Error"
+                                                                           Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteProduct(item))"
+                                                                           Disabled="@(DeleteProducts.Where(x=>x.Id == item.Id).Any() || category.IsSend)" 
+                                                                           Style="@(currentlyEditingCardId != category.Id ? "display: none;" : "")" />
+                                                        </MudStack>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            else
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body1">
+                                                            @item.ProductName
+                                                        </MudText>
+                                                    </td>
+                                                    <td>
+                                                        <MudText Typo="Typo.body1">
+                                                            @item.ProductPrice
+                                                        </MudText>
+                                                    </td>
+                                                    <td>
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                                            <MudNumericField tabindex="int" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width:80px;"
+                                                                             @bind-Value="item.Qty" Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" Step="1" Min="1" />
+                                                            <MudIconButton Variant="Variant.Filled" Color="Color.Error"
+                                                                           Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteProduct(item))"
+                                                                           Disabled="@(DeleteProducts.Where(x=>x.Id == item.Id).Any() || category.IsSend)"
+                                                                           Style="@(currentlyEditingCardId != category.Id ? "display: none;" : "")" />
+                                                        </MudStack>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    }
+                    else
+                    {
+                        <MudItem Class="d-flex align-center justify-center flex-grow-1" Style="height: 100%;">
+                            <MudText Typo="Typo.h6" Color="Color.Secondary">沒有任何商品</MudText>
+                        </MudItem>
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    <MudStack Style="width: 100%;">
+                        <MudStack Row="true">
+                            <MudText Class="ma-2" Typo="Typo.subtitle1" Color="Color.Info">
+                                總計: 
+                                <b>@(category.MyMenuProducts.Sum(m => m.Sum(k => k.Value.Sum(p => p.Qty))))</b>
+                                項商品
+                            </MudText>
+                            <MudSpacer />
+                            <MudText Class="ma-2" Typo="Typo.subtitle1" Color="Color.Info">
+                                總金額: 
+                                <b>@(category.MyMenuProducts.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty))))</b>
+                            </MudText>
+                        </MudStack>
+                        @if (MenuService.IsLoading)
+                        {
+                            <MudItem Class="d-flex align-center justify-center" Style="height:50px;">
+                                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                            </MudItem>
+                        }
+                        else
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.body1">最後異動時間</MudText>
+                                    <MudText Typo="Typo.subtitle1">@category.ReviseDate?.ToString("yyyy/MM/dd HH:mm")</MudText>
+                                </MudStack>
+                                <MudSpacer />
+                                @if (MenuService.IsLoading)
+                                {
+                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                                }
+                                else if(!category.IsSend)
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => SendMenu(category.Id)"
+                                               Disabled="@(!category.MyMenuProducts.Any())">
+                                        <MudIcon Icon="@Icons.Material.Filled.Send" />
+                                        生成估價單
+                                    </MudButton>
+                                }
+                            </MudStack>
+                        }
+                    </MudStack>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    }
+</MudPaper>
+
+<MudScrollToTop>
+    <MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" />
+</MudScrollToTop>
+
+@code {
+    private List<MyMenuCategoryDTO> MyAllMenu = [];
+    private List<MenuProduct> DeleteProducts = [];
+
+    // 追蹤要修改的菜單狀態
+    private int? currentlyEditingCardId = null;
+    private string originalCategoryName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        MenuService.OnStateChanged += StateHasChanged;
+        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+
+        await base.OnInitializedAsync();
+    }
+
+    //新增菜單
+    private async Task AddNewCategory()
+    {
+        await MenuService.AddMenuCategory();
+        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+    }
+
+    // 開始編輯
+    private void StartEditing(MyMenuCategoryDTO category)
+    {
+        // 儲存原始名稱，以便取消
+        DeleteProducts = [];
+        originalCategoryName = category.Name;
+        currentlyEditingCardId = category.Id;
+    }
+
+    // 儲存變更
+    private async Task SaveChanges(MyMenuCategoryDTO category)
+    {
+        // 1. 更新資料庫
+        await MenuService.UpdateMenuCategoryAsync(category, DeleteProducts);
+
+        // 2. 退出編輯模式
+        DeleteProducts = [];
+        currentlyEditingCardId = null;
+        originalCategoryName = "";
+
+        // 3. 重新載入資料以確認
+        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+    }
+
+    // 取消編輯
+    private void CancelEdit(MyMenuCategoryDTO category)
+    {
+        // 還原名稱
+        category.Name = originalCategoryName;
+        //還原要刪除的產品
+        DeleteProducts = [];
+        // 退出編輯模式
+        currentlyEditingCardId = null;
+        originalCategoryName = "";
+    }
+
+    private void DeleteProduct(MenuProduct product)
+    {
+        DeleteProducts.Add(product);
+    }
+
+    private async Task SendMenu(int menuId)
+    {
+        await MenuService.SendMenu(menuId);
+        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+    }
+
+    //刪除菜單
+    private async Task DeleteMenu(MyMenuCategoryDTO menuCategory)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "確認刪除",
+            $"您確定要刪除 {menuCategory.Name} 嗎？此操作無法復原。",
+            yesText: "確定刪除",
+            noText: "取消"
+        );
+
+        if (result == true)
+        {
+            await MenuService.DeleteMenuCategory(menuCategory.Id);
+            MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+        }
+    }
+
+    public void Dispose()
+    {
+        MenuService.OnStateChanged -= StateHasChanged;
+    }
+}
+

@@ -19,6 +19,6 @@ namespace PCCustomizer.Data
 
         public DbSet<MenuCategory> MenuCategory { get; set; }
 
-        public DbSet<MenuProduct> Menu { get; set; }
+        public DbSet<MenuProduct> MenuProduct { get; set; }
     }
 }

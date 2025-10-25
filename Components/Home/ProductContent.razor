@@ -144,10 +144,9 @@
                                 </MudTd>
                                 <MudTd DataLabel="">
                                     <MudItem Style="max-width: 80px">
-                                        <MudTextField T="int" Label="數量" Variant="Variant.Outlined"
-                                                      InputType="InputType.Number" Value="@context.Qty"
-                                                      ValueChanged="@((int newQty) => MenuService.AddMenuProduct(CurrentMenuCategory, SelectedCategory,@context, newQty))"
-                                                      Disabled="@(CurrentMenuCategory==null)" />
+                                        <MudNumericField T="int" Variant="Variant.Outlined" Value="@context.Qty"
+                                            ValueChanged="@((int newQty) => MenuService.AddMenuProduct(CurrentMenuCategory, SelectedCategory,@context, newQty))"
+                                            Disabled="@(CurrentMenuCategory==null)" Margin="Margin.Dense" Step="1" Min="1"/>
                                     </MudItem>
                                 </MudTd>
                             </RowTemplate>

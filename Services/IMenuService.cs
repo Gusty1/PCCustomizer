@@ -9,6 +9,7 @@ namespace PCCustomizer.Services
     /// </summary>
     public interface IMenuService : INotifyPropertyChanged
     {
+        bool IsLoading { get; }
         List<MenuCategory> MenuCategories { get;}
 
         event Action OnStateChanged;
@@ -21,5 +22,13 @@ namespace PCCustomizer.Services
             MyProductDTO myProductDTO, int qty);
 
         Task<List<Dictionary<string, List<MenuProduct>>>> GetDictMyMenu(MenuCategory menuCategory);
+
+        Task<List<MyMenuCategoryDTO>> GetMyMenuCtegoryDTOs();
+
+        Task DeleteMenuCategory(int id);
+
+        Task UpdateMenuCategoryAsync(MyMenuCategoryDTO myMenuCategoryDTO,List<MenuProduct> menuProducts);
+
+        Task SendMenu(int id);
     }
 }

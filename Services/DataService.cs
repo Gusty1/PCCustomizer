@@ -45,7 +45,7 @@ namespace PCCustomizer.Services
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await dbContext.Database.EnsureCreatedAsync();
 
-                // TODO 記得移除
+                // TODO 開發、測試不更新可以把這個註解移除
                 //return;
 
                 // 遵循「從下往上」的順序，清空所有資料

@@ -6,7 +6,7 @@
 @inject IMenuService MenuService
 @implements IDisposable
 
-<MudPaper Class="d-flex flex-column pa-4" @onclick="() => _popoverOpen = false">
+<MudPaper @onclick="() => _popoverOpen = false">
     <MudText Typo="Typo.h6" GutterBottom="true">首頁</MudText>
     <MudDivider />
 
@@ -18,6 +18,7 @@
                        Variant="Variant.Filled"
                        Color="Color.Secondary"
                        Disabled="@DataService.IsLoading">
+                       <MudIcon Icon="@Icons.Material.Filled.Refresh"/>
                 <MudText>更新原價屋資料</MudText>
             </MudButton>
         </MudItem>
@@ -46,7 +47,10 @@
             }
         </MudItem>
         <MudItem Class="flex-grow-1 d-flex justify-end align-center">
-            <MudButton Variant="Variant.Filled" OnClick="AddNewCategory">新增菜單</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="AddNewCategory">
+                <MudIcon Icon="@Icons.Material.Filled.Add"/>
+                新增菜單
+            </MudButton>
             @if (MenuService.MenuCategories is not null && MenuService.MenuCategories.Any())
             {
                 <MudItem Class="mx-2">
@@ -65,9 +69,10 @@
             {
                 <div style="position: relative; display: inline-block;"
                      @onmouseenter="() => _popoverOpen = true">
-                    <MudBadge Content="@(currentMenuCategory?.Menus?.Sum(m => m.Qty))" Overlap="true" Bordered="true" Color="Color.Info">
+                    <MudBadge Content="@(currentMenuCategory?.MenuProducts?.Sum(m => m.Qty))" Overlap="true" Bordered="true" Color="Color.Info">
                         <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="TogglePopover"
-                                   Disabled="@(!currentMenuCategory.Menus.Any())">
+                                   Disabled="@(!currentMenuCategory.MenuProducts.Any())">
+                            <MudIcon Icon="@Icons.Material.Filled.Menu"></MudIcon>
                             當前菜單
                         </MudButton>
                     </MudBadge>
@@ -76,7 +81,7 @@
                                 TransformOrigin="Origin.TopRight"
                                 MaxHeight="500" Style="overflow: auto">
                         <ChildContent>
-                            @if (currentMenuCategory is not null && currentMenuCategory.Menus.Any())
+                            @if (currentMenuCategory is not null && currentMenuCategory.MenuProducts.Any())
                             {
                                 <MudPaper Class="ma-2 my-2">
                                     <MudSimpleTable Dense="true" Hover="false" Bordered="true" Striped="false" style="max-width: 800px;max-height: 400px;overflow:auto">
@@ -136,12 +141,12 @@
                                     </MudSimpleTable>
                                     <MudDivider Class="my-2" />
                                     <MudStack Row="true" AlignItems="AlignItems.Center">
+                                        <MudText Class="ma-2">
+                                            共 <b>@(myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.Qty))))</b> 項商品
+                                        </MudText>
                                         <MudSpacer />
                                         <MudText Class="ma-2">
-                                            @{
-                                                int sum = myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty)));
-                                            }
-                                            總計: @sum
+                                            總計: <b>@myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty)))</b>
                                         </MudText>
                                     </MudStack>
                                 </MudPaper>
@@ -263,6 +268,10 @@
     private async Task AddNewCategory()
     {
         await MenuService.AddMenuCategory();
+        if (MenuService.MenuCategories.Any() && MenuService.MenuCategories.Count == 1)
+        {
+            currentMenuCategory = MenuService.MenuCategories.FirstOrDefault();
+        }
     }
 
     // 當 MenuService 變更時 (例如新增/更新產品)，這個方法會被呼叫

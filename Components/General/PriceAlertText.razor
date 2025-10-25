@@ -2,13 +2,12 @@
 @inject IDialogService DialogService
 
 <MudGrid Class="d-flex align-center">
-
     <MudItem>
         <MudButton @onclick="OpenComputerInfoDialogAsync" Variant="Variant.Filled" Color="Color.Primary">
+            <MudIcon Icon="@Icons.Material.Filled.Computer"/>
             我的電腦資訊
         </MudButton>
     </MudItem>
-
     <MudItem Class="flex-grow-1">
         <MudText class="my-2" Color="Color.Error" Typo="Typo.h6" Align="Align.Center">
             ※ 商品價格不保證一定是最新的，價格請以

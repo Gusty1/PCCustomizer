@@ -85,4 +85,11 @@ PCCustomizer/
 熱重載有時候會失靈，要去把bin 和 obj 刪掉再重建
 有時候緩存還是甚麼的，razor也必須要關掉重開才會正常
 
+因緣際會換了一份寫C#的工作，因為沒開發過windows app，所以想嘗試看看
+之前有稍微了解過electron但他給我的感覺就像用react native開發手機app 一樣，
+ 非常的臃腫
+ 某天有發現微軟有再推blazor hybrid就想說來試試看，實際開發問題很多
+
+ https://github.com/MicrosoftEdge/WebView2Feedback/issues/2805#issuecomment-1657218079
+
 
