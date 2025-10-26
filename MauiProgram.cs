@@ -24,6 +24,11 @@ namespace PCCustomizer
             builder.Services.AddMudServices();
             builder.Services.AddSingleton(Preferences.Default);
             builder.Services.AddSingleton<HttpClient>();
+            builder.Services.AddHttpClient<IUpdateCheckService, UpdateCheckService>(client =>
+            {
+                // 這是 GitHub API 要求的標頭
+                client.DefaultRequestHeaders.Add("User-Agent", "PCCustomizer-Update-Check");
+            });
             builder.Services.AddSingleton<IThemeService, ThemeService>();
             builder.Services.AddSingleton<IHardwareService, HardwareService>();
             builder.Services.AddScoped<IDataService, DataService>();

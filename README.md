@@ -1,95 +1,94 @@
 # PCCustomizer(組電腦小幫手)
 
-由於沒開發過桌面app，所以看看現在寫桌面app都用甚麼技術，因此就來學習這個`blazor hybird`
+## 緣起
+
+因緣際會換了一份寫C#後端的工作，由於沒開發過桌面app，
+想要來寫一個試試看，偶然發現微軟有再推`blazor hybrid`，因此就來學習了
 然後順便做一個小專案，證明自己的學習成果。
+感覺現在很多東西用網頁就能夠做到，沒必要用windows app，
+因此想了很久，感覺也只有看自己電腦資訊會比較需要用到而已，
+所以就決定做這個
 
-## 程式架構
+## 安裝說明
 
-DTO 抓取json的model
+由於這是一個獨立發布的應用程式 (未上架到 Microsoft Store)，在安裝前，您**必須先手動信任開發者的憑證**，Windows 系統才會允許安裝。
 
-```
-PCCustomizer/
-│
-├─ App/                     # MAUI App 主程式
-│   ├─ App.xaml
-│   └─ App.xaml.cs
-│
-├─ Components/              # 所有 Razor 元件（包含 Page 與 Layout）
-│   ├─ Pages/               # Blazor 頁面
-│   │   ├─ MainPage.razor
-│   │   └─ ComputerList.razor
-│   ├─ Layout/              # 共用 Layout
-│   │   ├─ MainLayout.razor
-│   │   └─ NavMenu.razor
-│   └─ SharedComponents/    # 可重用元件 (Card, Table, Dialog...)
-│       └─ ComputerCard.razor
-│
-├─ Services/                # 服務層
-│   ├─ ComputerDataService.cs   # 抓 JSON / API
-│   └─ ThemeService.cs          # 主題設定 (Microsoft.Maui.Storage)
-│
-├─ Models/                  # 資料模型
-│   └─ ComputerPart.cs
-│
-├─ Data/                    # SQLite DB / migration
-│   └─ AppDbContext.cs
-│
-├─ Resources/               # MAUI 資源
-│   ├─ Fonts/
-│   ├─ Images/
-│   ├─ Splash/
-│   ├─ AppIcon/
-│   └─ Raw/                 # 放靜態 JSON 或其他 Raw 資料
-│
-├─ Converters/              # 可選：值轉換器（例如表格顯示格式）
-│   └─ PriceConverter.cs
-│
-└─ MauiProgram.cs           # DI 註冊、MudBlazor 註冊、Service 註冊
-```
+**重要：** 憑證只需要安裝**一次**。未來更新版本時，只需下載新的 `.msix` 檔案執行即可。
 
-###  各項核心說明
+### 步驟一：安裝安全憑證 (只需執行一次)
 
-1. **Components**
-   - **Pages** 
-       * 放每個「可路由」頁面，例如首頁 `MainPage.razor`、電腦組件列表 `ComputerList.razor`
-       * 每個頁面只負責組合元件與呈現資料
+此步驟是為了告訴 Windows「我信任這個應用程式的來源」。
 
-    - **Layout**
-       * 放共用 Layout（例如導覽選單、標題欄、MudBlazor Drawer）
-       * 全站共用，方便之後擴充
+1.  下載 `PCCustomizer_x64.cer` 檔案。
+2.  在 `.cer` 檔案上按**右鍵**，選擇「**安裝憑證**」(Install Certificate)。
+3.  開啟「憑證匯入精靈」後，存放位置請務必選擇「**本機電腦**」(Local Machine)，然後按「下一步」。
+4.  (此時系統會跳出使用者帳戶控制 (UAC) 視窗，要求管理員權限，請按「**是**」。)
+5.  接著，選擇「**將所有憑證放入以下的存放區**」(Place all certificates in the following store)。
+6.  點選「**瀏覽...**」。
+7.  從清單中選擇「**受信任的人**」(Trusted People)，然後按「確定」。
+8.  按「下一步」，然後按「完成」。
+9.  您會看到「匯入成功」的訊息。憑證安裝完畢！
 
-    - **SharedComponents**
-       * 放可重複使用的 UI 元件，例如電腦卡片、對話框、表格
-       * 讓 Page 保持乾淨、只組合元件
+### 步驟二：安裝應用程式
 
-    - **_Imports.razor**：定義元件的「全局 using」，減少重複程式碼。
-    - **Routes.razor**：定義應用程式的「導航機制」，將 URL 請求映射到對應的頁面元件。
+當憑證安裝成功後，您就可以像安裝一般程式一樣安裝主程式了。
 
-2. **Services/**
+1.  下載 `PCCustomizer_x64.msix` 檔案。
+2.  直接**點兩下** `.msix` 檔案。
+3.  此時會彈出安裝視窗，因為您已信任憑證，發行者 (Publisher) 欄位現在應會正確顯示 (而不是「不明的發行者」)。
+4.  按下「**安裝**」(Install) 按鈕。
+5.  程式將會自動安裝完成並啟動。
 
-   * 抓 JSON、存取 SQLite、管理主題或偏好設定
-   * **全部透過 DI 注入**，方便在 Page 裡直接用 `@inject` 或建構子注入
+## 使用工具
 
-3. **Models/**
+- C# blazor Hybird
+- UI框架: [MudBlazor](https://mudblazor.com/getting-started/installation#using-templates)
 
-   * 定義 JSON / DB Entity / DTO
-   * 方便 Service 與 Page 共用
+## 功能
 
-4. **Data/**
+### 原價屋商品資訊
 
-   * 如果以後用 SQLite，放 DbContext、Migration 檔
-   * 對應 EF Core 設計模式
+定期爬取原價屋商品資訊，每次打開app都會更新，但不一定所有商品，一切還是以原價屋官網為準
 
----
+### 菜單管理
 
-熱重載有時候會失靈，要去把bin 和 obj 刪掉再重建
-有時候緩存還是甚麼的，razor也必須要關掉重開才會正常
+自由新建菜單、調整數量、菜單名稱、送出原價物估價單  
+~~原本有想說樣要拖曳改變順序，但MudBlazor有問題~~
 
-因緣際會換了一份寫C#的工作，因為沒開發過windows app，所以想嘗試看看
-之前有稍微了解過electron但他給我的感覺就像用react native開發手機app 一樣，
- 非常的臃腫
- 某天有發現微軟有再推blazor hybrid就想說來試試看，實際開發問題很多
+### 電腦資訊
 
- https://github.com/MicrosoftEdge/WebView2Feedback/issues/2805#issuecomment-1657218079
+做不到像是CPU-Z那麼詳細，但我有盡可能顯示了
+
+## 未來展望
+
+其實一開始我是看到這個[原價屋MCP工具](https://github.com/shyuan/coolpc-mcp-server)，就靈感爆炸
+我最初是希望可以做到用這個MCP+AI，讓它會自動讀取你的電腦硬體資訊，然後根據原價屋的商品給你建議的菜單，
+後來MCP+AI我弄不好，就放棄了，總而言之就現在的我是做不到了，
+也許未來會有人可以做出類似的產品
+
+
+### 特別感謝
+
+- 原價屋MCP工具: 給了我不少靈感和爬取原價屋的python
+- Gemini Pro: 由於家人買了最新的google手機，有Pro可以試用，稱不上完美，但至少也解決了我不少問題
+
+## 其他
+
+### 心得
+
+感覺自己對C#還是沒有很熟系，寫起來綁手綁腳的，還需要再精進
+
+### GGYY
+
+之前開發react native，就覺得檔案很大，想說微軟的這個會不會小一點，
+但打包完也有100多MB，我明明就沒有寫什麼東西...
+
+雖然是官方推薦的技術，但我遇到很多問題
+
+- 熱重載有時候會失靈，要去把bin 和 obj 刪掉再重建
+- 有時候緩存還是甚麼的，razor頁面面也必須要關掉重開才會正常
+- MudBlazor的拖曳功能不給用，我看[這個問題](https://github.com/MicrosoftEdge/WebView2Feedback/issues/2805#issuecomment-1657218079)去年年底就有了，到現在都還沒解決
+  - 也許.net9有修正了但我用.net8還在維護期間應該也要修正吧 
+- 自動更新不會打包出要更新的檔案
 
 

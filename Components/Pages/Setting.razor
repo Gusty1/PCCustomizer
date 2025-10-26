@@ -1,8 +1,9 @@
 ﻿@page "/setting"
 @inherits BaseComponent
 @inject IThemeService ThemeService
+@inject IUpdateCheckService UpdateService 
 
-<MudText Typo="Typo.h6" Class="pt-4" GutterBottom="true">設定</MudText>
+<MudText Typo="Typo.h6">設定</MudText>
 <MudDivider />
 
 <MudGrid>
@@ -26,25 +27,70 @@
         <MudText class="me-3" Typo="Typo.body1" Color="Color.Secondary">
             應用程式版本：@AppVersion
         </MudText>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled">檢查更新</MudButton>
+    </MudItem>
+
+    <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
+        <MudText class="me-3" Typo="Typo.body1" Color="Color.Secondary">
+            最新版本：@latestVersion
+        </MudText>
+    </MudItem>
+
+    <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
+        <MudButton Color="Color.Primary" 
+                   Variant="Variant.Filled"
+                   OnClick="HandleCheckForUpdate"
+                   Disabled="@isCheckingForUpdate">
+            @if(isCheckingForUpdate)
+            {
+                <MudProgressCircular Class="me-2" Indeterminate="true" Size="Size.Small" />
+                <span>檢查中...</span>
+            }
+            else
+            {
+                <span>檢查更新</span>
+            }
+        </MudButton>
     </MudItem>
 
 </MudGrid>
 
 @code {
-    // 此屬性作為 UI 和 ThemeService 之間的中介
     private bool IsDark
     {
-        get => ThemeService.IsDarkMode; // 讀取時，從服務取得狀態
-        set => ThemeService.ToggleDarkMode(value); // 寫入時(用戶點擊)，呼叫服務的方法
+        get => ThemeService.IsDarkMode; 
+        set => ThemeService.ToggleDarkMode(value); 
     }
     
     private string AppVersion { get; set; } = "N/A";
+    private string latestVersion = "N/A";
+    private bool isCheckingForUpdate = false;
 
     // 元件初始化時執行
     protected override async Task OnInitializedAsync()
     {
         AppVersion = AppInfo.VersionString; // 獲取 App 版本號
+        latestVersion = await UpdateService.GetLatestVersionAsync();
         await base.OnInitializedAsync();
+    }
+
+    // --- 3. 加入這個新的按鈕處理方法 ---
+    private async Task HandleCheckForUpdate()
+    {
+        isCheckingForUpdate = true;
+        StateHasChanged(); // 讓 UI 顯示「檢查中...」
+
+        // 呼叫只取得版本號的方法
+        latestVersion = await UpdateService.GetLatestVersionAsync();
+
+        isCheckingForUpdate = false;
+        StateHasChanged(); // 讓 UI 顯示版本號並恢復按鈕
+
+        // 檢查完畢後，如果確實有新版，
+        var current = new Version(AppVersion);
+        if (Version.TryParse(latestVersion, out var latest) && latest > current)
+        {
+            // 呼叫會彈出對話框的方法
+            await UpdateService.CheckAndNotifyUpdatesAsync();
+        }
     }
 }
