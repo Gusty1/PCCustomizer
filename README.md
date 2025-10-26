@@ -1,7 +1,5 @@
 # PCCustomizer(組電腦小幫手)
 
-## 緣起
-
 因緣際會換了一份寫C#後端的工作，由於沒開發過桌面app，想要來寫一個試試看，偶然發現微軟有再推`blazor hybrid`，因此就來學習了
 然後順便做一個小專案，證明自己的學習成果。感覺現在很多東西用網頁就能夠做到，沒必要用windows app，
 因此想了很久，感覺也只有看自己電腦資訊會比較需要用到而已，所以就決定做這個
@@ -83,7 +81,7 @@
 
 - 熱重載有時候會失靈，要去把bin 和 obj 刪掉再重建
 - 有時候緩存還是甚麼的，razor頁面面也必須要關掉重開才會正常
-- MudBlazor的拖曳功能不給用，我看[這個問題](https://github.com/MicrosoftEdge/WebView2Feedback/issues/2805#issuecomment-1657218079)去年年底就有了，到現在都還沒解決
+- MudBlazor的拖曳功能不給用，我看[這個問題](https://github.com/MudBlazor/MudBlazor/issues/8227)去年年底就有了，到現在都還沒解決
   - 也許.net9有修正了但我用.net8還在維護期間應該也要修正吧 
 - 自動更新不會打包出要更新的檔案
 
