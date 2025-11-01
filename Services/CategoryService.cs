@@ -43,6 +43,7 @@ namespace PCCustomizer.Services
                     .OrderBy(c => c.CategoryId)
                     .Include(c => c.Subcategories)
                     .ThenInclude(s => s.Products)
+                    .AsSplitQuery()
                     .ToListAsync();
                 var myCategoryDTOList = new List<MyCategoryDTO>();
                 foreach (var category in result)

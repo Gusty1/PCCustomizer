@@ -40,13 +40,13 @@
                         @if (currentlyEditingCardId == category.Id)
                         {
                             <MudTextField @bind-Value="category.Name" Label="菜單名稱"
-                                             Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                          Variant="Variant.Outlined" Margin="Margin.Dense" />
                         }
                         else
                         {
                             <MudText Class="flex-grow-1" Typo="Typo.h6">@category.Name</MudText>
                         }
-                        @if (currentlyEditingCardId == category.Id)
+                        @if (currentlyEditingCardId == category.Id && !MenuService.IsLoading)
                         {
                             <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Success" OnClick="@(() => SaveChanges(category))" />
                             <MudIconButton Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" OnClick="@(() => CancelEdit(category))" />
@@ -64,8 +64,11 @@
                                                    OnClick="@(() => OpenExternalLink(category.PngUrl))" />
                                 </MudTooltip>
                             }
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => StartEditing(category))"/>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteMenu(category))" />
+                            @if (!MenuService.IsLoading)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => StartEditing(category))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteMenu(category))" />
+                            }
                         }
                     </MudItem>
                 </MudCardHeader>
@@ -123,7 +126,7 @@
                                                                              @bind-Value="item.Qty" Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" />
                                                             <MudIconButton Variant="Variant.Filled" Color="Color.Error"
                                                                            Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteProduct(item))"
-                                                                           Disabled="@(DeleteProducts.Where(x=>x.Id == item.Id).Any() || category.IsSend)" 
+                                                                           Disabled="@(DeleteProducts.Where(x=>x.Id == item.Id).Any() || category.IsSend)"
                                                                            Style="@(currentlyEditingCardId != category.Id ? "display: none;" : "")" />
                                                         </MudStack>
                                                     </td>
@@ -171,13 +174,13 @@
                     <MudStack Style="width: 100%;">
                         <MudStack Row="true">
                             <MudText Class="ma-2" Typo="Typo.subtitle1" Color="Color.Info">
-                                總計: 
+                                總計:
                                 <b>@(category.MyMenuProducts.Sum(m => m.Sum(k => k.Value.Sum(p => p.Qty))))</b>
                                 項商品
                             </MudText>
                             <MudSpacer />
                             <MudText Class="ma-2" Typo="Typo.subtitle1" Color="Color.Info">
-                                總金額: 
+                                總金額:
                                 <b>@(category.MyMenuProducts.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty))))</b>
                             </MudText>
                         </MudStack>
@@ -199,7 +202,7 @@
                                 {
                                     <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
                                 }
-                                else if(!category.IsSend)
+                                else if (!category.IsSend && currentlyEditingCardId != category.Id)
                                 {
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => SendMenu(category.Id)"
                                                Disabled="@(!category.MyMenuProducts.Any())">
@@ -270,6 +273,7 @@
     // 取消編輯
     private void CancelEdit(MyMenuCategoryDTO category)
     {
+        if (category == null) return;
         // 還原名稱
         category.Name = originalCategoryName;
         //還原要刪除的產品
@@ -279,15 +283,19 @@
         originalCategoryName = "";
     }
 
+    //刪除產品
     private void DeleteProduct(MenuProduct product)
     {
         DeleteProducts.Add(product);
     }
 
+    //送出估價單
     private async Task SendMenu(int menuId)
     {
         await MenuService.SendMenu(menuId);
         MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+        var category = MyAllMenu.FirstOrDefault(x => x.Id == menuId);
+        CancelEdit(category);
     }
 
     //刪除菜單
