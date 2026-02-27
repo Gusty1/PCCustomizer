@@ -11,8 +11,8 @@ namespace PCCustomizer.Models.Hardware
     /// </summary>
     public class GpuInfo
     {
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public double AdapterRamGb { get; set; }
-        public string DriverVersion { get; set; }
+        public required string DriverVersion { get; set; }
     }
 }

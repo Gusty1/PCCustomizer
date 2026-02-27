@@ -40,11 +40,6 @@
 4. 按下「**安裝**」(Install) 按鈕。
 5. 程式將會自動安裝完成並啟動。
 
-## 使用工具
-
-- C# blazor Hybrid
-- UI框架: [MudBlazor](https://mudblazor.com/getting-started/installation#using-templates)
-
 ## 功能
 
 ### 原價屋商品資訊

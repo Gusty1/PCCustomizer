@@ -1,25 +1,20 @@
 @inherits PCCustomizer.Components.BaseComponent
 @inject IDialogService DialogService
 
-<MudGrid Class="d-flex align-center">
-    <MudItem>
-        <MudButton @onclick="OpenComputerInfoDialogAsync" Variant="Variant.Filled" Color="Color.Primary">
-            <MudIcon Icon="@Icons.Material.Filled.Computer"/>
-            §Úªº¹q¸£¸ê°T
-        </MudButton>
-    </MudItem>
-    <MudItem Class="flex-grow-1">
-        <MudText class="my-2" Color="Color.Error" Typo="Typo.h6" Align="Align.Center">
-            ¡° °Ó«~»ù®æ¤£«OÃÒ¤@©w¬O³Ì·sªº¡A»ù®æ½Ğ¥H
-            <MudLink OnClick="@(() => OpenExternalLink("https://www.coolpc.com.tw/evaluate.php"))"
-                     Typo="Typo.h6"
-                     Color="Color.Info">
-                ­ì»ù«Î
-            </MudLink>
-            ©xºô¬°·Ç
-        </MudText>
-    </MudItem>
-</MudGrid>
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="grow my-2" Spacing="2" Style="flex-shrink: 0;">
+    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+               @onclick="OpenComputerInfoDialogAsync" StartIcon="@Icons.Material.Filled.Computer">
+        æˆ‘çš„é›»è…¦è³‡è¨Š
+    </MudButton>
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="grow" NoIcon="false">
+        å•†å“åƒ¹æ ¼ä¸ä¿è­‰ä¸€å®šæ˜¯æœ€æ–°çš„ï¼Œåƒ¹æ ¼è«‹ä»¥
+        <MudLink OnClick="@(() => OpenExternalLink("https://www.coolpc.com.tw/evaluate.php"))"
+                 Color="Color.Info">
+            åŸåƒ¹å±‹
+        </MudLink>
+        å®˜ç¶²ç‚ºæº–
+    </MudAlert>
+</MudStack>
 
 @code {
     private Task OpenComputerInfoDialogAsync()

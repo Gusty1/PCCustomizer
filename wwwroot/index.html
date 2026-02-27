@@ -26,10 +26,12 @@
 
     <script>
         function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth' // 使用 'smooth' 可以讓滾動有平滑的動畫效果
-            });
+            var panelsEl = document.querySelector('.mud-tabs-vertical .mud-tabs-panels');
+            if (panelsEl) {
+                panelsEl.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
     </script>
     <script src="_framework/blazor.webview.js" autostart="false"></script>

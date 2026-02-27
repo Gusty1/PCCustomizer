@@ -23,15 +23,17 @@ namespace PCCustomizer
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
             builder.Services.AddSingleton(Preferences.Default);
-            builder.Services.AddSingleton<HttpClient>();
             builder.Services.AddHttpClient<IUpdateCheckService, UpdateCheckService>(client =>
             {
                 // 這是 GitHub API 要求的標頭
                 client.DefaultRequestHeaders.Add("User-Agent", "PCCustomizer-Update-Check");
             });
+            builder.Services.AddHttpClient<IDataService, DataService>(client =>
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", "PCCustomizer");
+            });
             builder.Services.AddSingleton<IThemeService, ThemeService>();
             builder.Services.AddSingleton<IHardwareService, HardwareService>();
-            builder.Services.AddScoped<IDataService, DataService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IMenuService, MenuService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
