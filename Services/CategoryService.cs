@@ -28,7 +28,7 @@ namespace PCCustomizer.Services
             }
         }
 
-        public event Action OnStateChanged;
+        public event Action? OnStateChanged;
 
         public async Task<List<MyCategoryDTO>> GetCategoriesWithDetailsAsync(MenuCategory menuCategory)
         {
@@ -94,8 +94,11 @@ namespace PCCustomizer.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"查詢分類資料時發生錯誤: {ex.Message}");
-                IsLoading = false;
                 return [];
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
     }

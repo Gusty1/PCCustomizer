@@ -1,5 +1,11 @@
 ﻿html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100%;
+    overflow: hidden;
+}
+
+#app {
+    height: 100%;
 }
 
 a, .btn-link {
@@ -69,10 +75,81 @@ h1:focus {
     display: none;
 }
 
-/*由於首頁左邊tab怎麼設定都弄不好，所以強制改CSS*/
-.d-inline-block:has(.mud-tab) {
+/* 高度鏈: MudMainContent 不可超過剩餘空間，允許頁面捲動 */
+.mud-main-content {
+    min-height: 0 !important;
+    overflow: auto;
+}
+
+/* Tab 左側列表固定 25% 寬度 */
+.mud-tabs.mud-tabs-vertical .mud-tabs-tabbar {
+    width: 25% !important;
+    flex-shrink: 0 !important;
+    overflow-y: auto;
+}
+
+/* Tab 選中樣式: 佔滿整列 + 淺色背景 */
+.mud-tabs.mud-tabs-vertical .mud-tab.mud-tab-active {
+    background-color: var(--mud-palette-primary-hover) !important;
+    color: var(--mud-palette-primary) !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* 確保所有 tab 都佔滿整列寬度 (消除間隙) */
+.mud-tabs.mud-tabs-vertical .mud-tab {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* Tab wrapper 允許文字換行 (預設 width:max-content 會撐開) */
+.mud-tabs.mud-tabs-vertical .mud-tabs-tabbar-content {
+    white-space: normal !important;
+}
+
+.mud-tabs.mud-tabs-vertical .mud-tabs-tabbar-wrapper {
     width: 100% !important;
 }
+
+/* Tab 內部 .d-inline-block 包裝器需佔滿寬度，否則 tab 不會填滿整列 */
+.mud-tabs.mud-tabs-vertical .mud-tabs-tabbar-wrapper .d-inline-block {
+    width: 100% !important;
+}
+
+/* Tab 右側面板填滿寬度並可捲動 */
+.mud-tabs.mud-tabs-vertical .mud-tabs-panels {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow-y: auto;
+}
+
+/* Tab panel 內容填滿寬度 */
+.mud-tabs.mud-tabs-vertical .mud-tab-panel {
+    width: 100%;
+}
+
+/* 菜單卡片標頭: 按鈕與標題垂直置中 + 淺底色 */
+.mud-card-header {
+    align-items: center;
+    background-color: var(--mud-palette-background-gray);
+}
+
+.mud-card-header-actions {
+    align-self: center;
+}
+
+/* 表格 thead 加上主題色背景 */
+.mud-table thead th {
+    background-color: var(--mud-palette-primary) !important;
+    color: var(--mud-palette-primary-text) !important;
+    font-weight: 600;
+}
+
+/* 卡片底部 (CardActions) 加上上邊線分隔 */
+.mud-card-actions {
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
 
 @supports (-webkit-touch-callout: none) {
     .status-bar-safe-area {

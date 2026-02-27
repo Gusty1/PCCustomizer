@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace PCCustomizer.Models
 {
@@ -14,13 +14,13 @@ namespace PCCustomizer.Models
 
         public int CategoryId { get; set; }
 
-        public string CateroyName { get; set; }
+        public required string CategoryName { get; set; }
 
-        public string SubcategoryName { get; set; }
+        public required string SubcategoryName { get; set; }
 
-        public string ProductName { get; set; }
+        public required string ProductName { get; set; }
 
-        public string ProdctFullText { get; set; }
+        public required string ProductFullText { get; set; }
 
         public int ProductPrice { get; set; }
 

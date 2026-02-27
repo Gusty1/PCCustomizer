@@ -14,5 +14,7 @@ namespace PCCustomizer.Models.DTOs
 
         //我的子目錄List
         public List<MySubcategoryDTO>? Subcategories { get; set; } = [];
+
+        public override string ToString() => CategoryName;
     }
 }

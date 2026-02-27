@@ -11,7 +11,7 @@ namespace PCCustomizer.Models.Hardware
     /// </summary>
     public class DiskInfo
     {
-        public string Model { get; set; }
+        public required string Model { get; set; }
         public double SizeGb { get; set; }
     }
 }

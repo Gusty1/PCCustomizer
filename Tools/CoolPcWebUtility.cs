@@ -288,7 +288,7 @@ namespace PCCustomizer.Tools
             foreach (var product in products)
             {
                 sb.Append("<tr bgcolor=#eeeecc>");
-                sb.Append($"<td>{product.CateroyName}<td>{product.ProdctFullText}<td><div bis_skin_checked=\"1\">{product.SubcategoryName}</div><td>{product.Qty}<td><div bis_skin_checked=\"1\">{product.ProductPrice * product.Qty}</div>");
+                sb.Append($"<td>{product.CategoryName}<td>{product.ProductFullText}<td><div bis_skin_checked=\"1\">{product.SubcategoryName}</div><td>{product.Qty}<td><div bis_skin_checked=\"1\">{product.ProductPrice * product.Qty}</div>");
             }
 
             // 總價列

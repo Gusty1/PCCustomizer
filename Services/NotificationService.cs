@@ -22,7 +22,7 @@ namespace PCCustomizer.Services
         /// <param name="message">要顯示的訊息</param>
         public void ShowSuccess(string message)
         {
-            _snackbar.Add(message, Severity.Success);
+            MainThread.BeginInvokeOnMainThread(() => _snackbar.Add(message, Severity.Success));
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace PCCustomizer.Services
         /// <param name="message">要顯示的訊息</param>
         public void ShowError(string message)
         {
-            _snackbar.Add(message, Severity.Error, config => { config.CloseAfterNavigation = true; });
+            MainThread.BeginInvokeOnMainThread(() => _snackbar.Add(message, Severity.Error, config => { config.CloseAfterNavigation = true; }));
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace PCCustomizer.Services
         /// <param name="message">要顯示的訊息</param>
         public void ShowInfo(string message)
         {
-            _snackbar.Add(message, Severity.Info);
+            MainThread.BeginInvokeOnMainThread(() => _snackbar.Add(message, Severity.Info));
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace PCCustomizer.Services
         /// <param name="message">要顯示的訊息</param>
         public void ShowWarning(string message)
         {
-            _snackbar.Add(message, Severity.Warning);
+            MainThread.BeginInvokeOnMainThread(() => _snackbar.Add(message, Severity.Warning));
         }
     }
 }

@@ -4,29 +4,28 @@
 @inject IDataService DataService
 @inject ICategoryService CategoryService
 @inject IMenuService MenuService
+@inject IPreferences Preferences
 @implements IDisposable
 
-<MudPaper @onclick="() => _popoverOpen = false">
-    <MudText Typo="Typo.h6" GutterBottom="true">首頁</MudText>
-    <MudDivider />
-
-    <PriceAlertText />
-
-    <MudGrid Class="d-flex align-center my-2 flex-grow-1">
-        <MudItem>
-            <MudButton OnClick="UpdateData"
-                       Variant="Variant.Filled"
-                       Color="Color.Secondary"
-                       Disabled="@DataService.IsLoading">
-                       <MudIcon Icon="@Icons.Material.Filled.Refresh"/>
-                <MudText>更新原價屋資料</MudText>
+<MudPaper @onclick="() => _popoverOpen = false" Class="d-flex flex-column" Style="flex: 1 1 0; overflow: hidden;">
+    <MudStack Row="true" AlignItems="AlignItems.End" Spacing="2" Style="flex-shrink: 0;">
+        <PriceAlertText />
+        <div style="width:100%; display: flex;justify-content: end;">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.CloudSync"
+                       OnClick="UpdateData" Disabled="@DataService.IsLoading">
+                更新原價屋資料
             </MudButton>
-        </MudItem>
+        </div>
+    </MudStack>
+
+    <MudGrid Class="d-flex align-center" Style="flex-shrink: 0;">
         <MudItem>
             @* bind-Value的值一定要大寫 *@
             <MudSelect T="MyCategoryDTO?" @bind-Value="SelectedCategory" Label="主分類" Placeholder="選擇主分類"
                        AdornmentColor="Color.Primary" FitContent="false" Clearable="true"
-                       Variant="Variant.Outlined">
+                       Disabled="@DataService.IsLoading" MaxHeight="700"
+                       Variant="Variant.Outlined" Style="width: 350px;">
                 @if (categories is not null && categories.Any())
                 {
                     @foreach (var category in categories)
@@ -47,7 +46,7 @@
             }
         </MudItem>
         <MudItem Class="flex-grow-1 d-flex justify-end align-center">
-            <MudButton Variant="Variant.Filled" OnClick="AddNewCategory">
+            <MudButton Variant="Variant.Filled" OnClick="AddNewCategory" Disabled="@DataService.IsLoading">
                 <MudIcon Icon="@Icons.Material.Filled.Add"/>
                 新增菜單
             </MudButton>
@@ -55,7 +54,8 @@
             {
                 <MudItem Class="mx-2">
                     <MudSelect T="MenuCategory?" Value="CurrentMenuCategory" ValueChanged="OnCurrentMenuChanged"
-                               Label="菜單" Variant="Variant.Filled" FitContent="true">
+                               Label="菜單" Variant="Variant.Filled" FitContent="true"
+                               Disabled="@DataService.IsLoading">
                         @foreach (var menu in MenuService.MenuCategories)
                         {
                             <MudSelectItem T="MenuCategory?" Value="@menu" Disabled="@menu.IsSend">
@@ -69,9 +69,9 @@
             {
                 <div style="position: relative; display: inline-block;"
                      @onmouseenter="() => _popoverOpen = true">
-                    <MudBadge Content="@(currentMenuCategory?.MenuProducts?.Sum(m => m.Qty))" Overlap="true" Bordered="true" Color="Color.Info">
+                    <MudBadge Content="@(currentMenuCategory?.MenuProducts?.Sum(m => m.Qty))" Overlap="true" Bordered="true" Color="Color.Info" Class="mx-5">
                         <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="TogglePopover"
-                                   Disabled="@(!currentMenuCategory.MenuProducts.Any())">
+                                   Disabled="@(DataService.IsLoading || !currentMenuCategory.MenuProducts.Any())">
                             <MudIcon Icon="@Icons.Material.Filled.Menu"></MudIcon>
                             當前菜單
                         </MudButton>
@@ -84,7 +84,16 @@
                             @if (currentMenuCategory is not null && currentMenuCategory.MenuProducts.Any())
                             {
                                 <MudPaper Class="ma-2 my-2">
-                                    <MudSimpleTable Dense="true" Hover="false" Bordered="true" Striped="false" style="max-width: 800px;max-height: 400px;overflow:auto">
+                                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="true" FixedHeader="true"
+                                                     Style="max-width: 800px; max-height: 400px; overflow: auto;">
+                                        <thead>
+                                            <tr>
+                                                <th style="min-width: 80px;">類別</th>
+                                                <th>商品名稱</th>
+                                                <th style="min-width: 70px; text-align: right;">價格</th>
+                                                <th style="min-width: 50px; text-align: center;">數量</th>
+                                            </tr>
+                                        </thead>
                                         <tbody>
                                             @foreach (var myMenu in myMenus)
                                             {
@@ -97,41 +106,17 @@
                                                         {
                                                             <tr>
                                                                 <td rowspan="@value.Count">@key</td>
-                                                                <td>
-                                                                    <MudText>
-                                                                        @item.ProductName
-                                                                    </MudText>
-                                                                </td>
-                                                                <td>
-                                                                    <MudText>
-                                                                        @item.ProductPrice
-                                                                    </MudText>
-                                                                </td>
-                                                                <td>
-                                                                    <MudText>
-                                                                        @item.Qty
-                                                                    </MudText>
-                                                                </td>
+                                                                <td>@item.ProductName</td>
+                                                                <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
+                                                                <td style="text-align: center;">@item.Qty</td>
                                                             </tr>
                                                         }
                                                         else
                                                         {
                                                             <tr>
-                                                                <td>
-                                                                    <MudText>
-                                                                        @item.ProductName
-                                                                    </MudText>
-                                                                </td>
-                                                                <td>
-                                                                    <MudText>
-                                                                        @item.ProductPrice
-                                                                    </MudText>
-                                                                </td>
-                                                                <td>
-                                                                    <MudText>
-                                                                        @item.Qty
-                                                                    </MudText>
-                                                                </td>
+                                                                <td>@item.ProductName</td>
+                                                                <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
+                                                                <td style="text-align: center;">@item.Qty</td>
                                                             </tr>
                                                         }
                                                     }
@@ -146,7 +131,7 @@
                                         </MudText>
                                         <MudSpacer />
                                         <MudText Class="ma-2">
-                                            總計: <b>@myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty)))</b>
+                                            總計: <b>$@(myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty))).ToString("N0"))</b>
                                         </MudText>
                                     </MudStack>
                                 </MudPaper>
@@ -164,10 +149,22 @@
         </MudItem>
     </MudGrid>
 
-    <MudGrid Class="d-flex flex-grow-1 my-2">
-        <ProductContent Subcategories="@subcategories" SelectedCategory="@selectedCategory"
-                        CurrentMenuCategory="@currentMenuCategory" />
-    </MudGrid>
+    <div style="flex: 1 1 0; min-height: 0; overflow: hidden; display: flex;">
+        @if (DataService.IsLoading)
+        {
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-4">更新原價屋資訊中...</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Tertiary" Class="mt-1">請耐心等待</MudText>
+            </div>
+        }
+        else
+        {
+            <ProductContent Subcategories="@subcategories" SelectedCategory="@selectedCategory"
+                            CurrentMenuCategory="@currentMenuCategory" />
+        }
+    </div>
+
 </MudPaper>
 
 <MudScrollToTop>
@@ -206,6 +203,7 @@
             }
             else
             {
+                Preferences.Set("LastCategoryId", selectedCategory.CategoryId);
                 //選擇主目錄時切換對應的子目錄
                 subcategories = categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>();
                 subcategories.OrderBy(s => s.CategoryId);
@@ -232,6 +230,24 @@
         //取得當前的菜單資料
         await MenuService.GetMenuCategoriesAsync();
 
+        // 還原上次選擇的菜單，若無紀錄或已被刪除則預設第一個可用的
+        if (MenuService.MenuCategories is not null && MenuService.MenuCategories.Any())
+        {
+            var lastMenuId = Preferences.Get("LastMenuId", -1);
+            var restoredMenu = MenuService.MenuCategories.FirstOrDefault(m => m.Id == lastMenuId && !m.IsSend)
+                               ?? MenuService.MenuCategories.FirstOrDefault(m => !m.IsSend)
+                               ?? MenuService.MenuCategories.First();
+            await OnCurrentMenuChanged(restoredMenu);
+        }
+
+        // 還原上次選擇的主分類，若無紀錄則預設第一個
+        if (categories.Any())
+        {
+            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
+            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                               ?? categories.First();
+        }
+
         await base.OnInitializedAsync();
     }
 
@@ -241,18 +257,21 @@
         // 1. 手動更新私有欄位的值
         currentMenuCategory = newMenu;
 
-        // 2. 執行非同步邏輯：重新載入 categories (這會包含新菜單的 Qty)
+        // 2. 記住選擇的菜單
+        Preferences.Set("LastMenuId", newMenu?.Id ?? -1);
+
+        // 3. 執行非同步邏輯：重新載入 categories (這會包含新菜單的 Qty)
         categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
         myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
 
-        // 3. 同步更新 subcategories
+        // 4. 同步更新 subcategories
         if (selectedCategory is not null)
         {
             subcategories = categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>();
             subcategories.OrderBy(s => s.CategoryId);
         }
 
-        // 4. 通知 Blazor 畫面需要重新渲染
+        // 5. 通知 Blazor 畫面需要重新渲染
         await InvokeAsync(StateHasChanged);
     }
 
@@ -260,8 +279,15 @@
     private async Task UpdateData()
     {
         SelectedCategory = null;
-        _ = DataService.SeedDataIfNeededAsync();
+        await DataService.SeedDataIfNeededAsync();
+        // 更新完成後重新載入資料並還原分類選擇
         categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
+        if (categories.Any())
+        {
+            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
+            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                               ?? categories.First();
+        }
     }
 
     //新增菜單

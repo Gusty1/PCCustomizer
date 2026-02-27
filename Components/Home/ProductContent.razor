@@ -5,19 +5,19 @@
 @inject IMenuService MenuService
 @implements IDisposable
 
-<MudItem Class="flex-grow-1">
+<div style="flex: 1 1 0; overflow: hidden; min-height: 0; display: flex; flex-direction: column; width: 100%;">
     @if (Subcategories is not null && Subcategories.Any())
     {
         <MudTabs Elevation="4" Rounded="true" ApplyEffectsToContainer="true" Outlined="true"
                  Position="Position.Start" Border="true" PanelClass="d-flex flex-column pa-3" Centered="false"
-                 ActiveTabClass="border-solid border-2 mud-border-primary"
-                 ActivePanelIndexChanged="OnTabChanged">
+                 ActiveTabClass=""
+                 ActivePanelIndexChanged="OnTabChanged" Style="width: 100%; flex: 1 1 0; overflow: hidden;">
             @foreach (var subcategory in Subcategories)
             {
                 <MudTabPanel Class="flex-grow-1">
                     <TabContent>
                         <MudItem Class="d-flex flex-grow-1 align-center">
-                            <MudText Align="Align.Left" Typo="Typo.subtitle1" Style="width:100%;">
+                            <MudText Align="Align.Left" Typo="Typo.subtitle1" Style="width:100%; white-space: normal; word-break: break-word;">
                                 @subcategory.SubcategoryName
                             </MudText>
                             @if (@subcategory.Qty > 0)
@@ -146,7 +146,7 @@
                                     <MudItem Style="max-width: 80px">
                                         <MudNumericField T="int" Variant="Variant.Outlined" Value="@context.Qty"
                                             ValueChanged="@((int newQty) => MenuService.AddMenuProduct(CurrentMenuCategory, SelectedCategory,@context, newQty))"
-                                            Disabled="@(CurrentMenuCategory==null)" Margin="Margin.Dense" Step="1" Min="1"/>
+                                            Disabled="@(CurrentMenuCategory==null)" Margin="Margin.Dense" Step="1" Min="0"/>
                                     </MudItem>
                                 </MudTd>
                             </RowTemplate>
@@ -164,7 +164,7 @@
             }
         </MudTabs>
     }
-</MudItem>
+</div>
 
 @code {
     //判斷商品圖片是否要放大

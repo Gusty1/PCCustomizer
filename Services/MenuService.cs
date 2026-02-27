@@ -44,7 +44,7 @@ namespace PCCustomizer.Services
             }
         }
 
-        public event Action OnStateChanged;
+        public event Action? OnStateChanged;
 
         public async Task AddMenuCategory()
         {
@@ -113,6 +113,8 @@ namespace PCCustomizer.Services
                     var findCategory = await dbContext.Category.FirstOrDefaultAsync(x => x.CategoryId == myCategoryDTO.CategoryId);
                     var subcategory = await dbContext.Subcategory.FirstOrDefaultAsync(x => x.SubcategoryName == myProductDTO.SubcategoryName);
                     var product = await dbContext.Product.FirstOrDefaultAsync(x => x.RawText == myProductDTO.RawText);
+                    if (findCategory == null || subcategory == null || product == null) return;
+
                     var currentMenuCategory = await dbContext.MenuCategory.FirstOrDefaultAsync(x => x.Id == menuCategory.Id);
                     if (currentMenuCategory != null)
                     {
@@ -123,10 +125,10 @@ namespace PCCustomizer.Services
                     {
                         MenuCategoryId = menuCategory.Id,
                         CategoryId = findCategory.CategoryId,
-                        CateroyName = findCategory.CategoryName,
+                        CategoryName = findCategory.CategoryName,
                         SubcategoryName = subcategory.SubcategoryName,
                         ProductName = product.RawText,
-                        ProdctFullText = product.FullText,
+                        ProductFullText = product.FullText,
                         ProductPrice = product.Price ?? 0,
                         Qty = qty,
                     });
@@ -154,6 +156,7 @@ namespace PCCustomizer.Services
 
                 var fineMenuCategory = await dbContext.MenuCategory.Include(x => x.MenuProducts)
                     .FirstOrDefaultAsync(x => x.Id == menuCategory.Id);
+                if (fineMenuCategory == null) return [];
                 var menus = fineMenuCategory.MenuProducts.OrderBy(x => x.CategoryId).ToList();
                 var filterCategory = menus.DistinctBy(x => x.CategoryId).ToList();
                 var result = new List<Dictionary<string, List<MenuProduct>>>();
@@ -163,7 +166,7 @@ namespace PCCustomizer.Services
                     result.Add(new Dictionary<string, List<MenuProduct>>
                     {
                         {
-                            category.CateroyName,
+                            category.CategoryName,
                             menuProductList
                         }
                     });
@@ -212,10 +215,9 @@ namespace PCCustomizer.Services
             try
             {
                 var findMenuCategory = await dbContext.MenuCategory.FirstOrDefaultAsync(x => x.Id == id);
-                if (findMenuCategory != null)
-                {
-                    dbContext.MenuCategory.Remove(findMenuCategory);
-                }
+                if (findMenuCategory == null) return;
+
+                dbContext.MenuCategory.Remove(findMenuCategory);
                 var result = await dbContext.SaveChangesAsync();
                 if (result > 0)
                 {
@@ -253,7 +255,7 @@ namespace PCCustomizer.Services
                             {
                                 if (editProduct.Qty <= 0) continue;
                                 var fineMenuProduct = findMenuProducts.FirstOrDefault(x => x.ProductName == editProduct.ProductName
-                                && x.CateroyName == key);
+                                && x.CategoryName == key);
                                 if (fineMenuProduct != null)
                                 {
                                     fineMenuProduct.Qty = editProduct.Qty;
@@ -284,6 +286,7 @@ namespace PCCustomizer.Services
             {
                 IsLoading = true;
                 var findMenu = await dbContext.MenuCategory.Include(x => x.MenuProducts).FirstOrDefaultAsync(x => x.Id == id);
+                if (findMenu == null) return;
                 var payloadStr = CoolPcWebUtility.BuildPayLoad(findMenu.MenuProducts).Trim();
                 var cookie = await CoolPcWebUtility.GetCoolPcSessionIdAsync();
                 string htmUrl = "";

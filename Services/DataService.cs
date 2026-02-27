@@ -15,7 +15,7 @@ namespace PCCustomizer.Services
     /// <seealso cref="IDataService" />
     public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, INotificationService notificationService) : ObservableObject , IDataService
     {
-        private readonly string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
+        private const string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
 
         private bool _isLoading = false;
         public bool IsLoading
@@ -30,7 +30,7 @@ namespace PCCustomizer.Services
                 }
             }
         }
-        public event Action OnStateChanged;
+        public event Action? OnStateChanged;
 
         public async Task SeedDataIfNeededAsync()
         {
@@ -44,9 +44,6 @@ namespace PCCustomizer.Services
                 using var scope = serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await dbContext.Database.EnsureCreatedAsync();
-
-                // TODO 開發、測試不更新可以把這個註解移除
-                //return;
 
                 // 遵循「從下往上」的順序，清空所有資料
                 Debug.WriteLine("正在清空 Product 資料表...");
@@ -70,9 +67,14 @@ namespace PCCustomizer.Services
 
                 foreach (var jsonCategory in parsedJson)
                 {
+                    if (!int.TryParse(jsonCategory.CategoryId, out var categoryId))
+                    {
+                        Debug.WriteLine($"跳過無效的 CategoryId: {jsonCategory.CategoryId}");
+                        continue;
+                    }
                     var newDbCategory = new Category
                     {
-                        CategoryId = int.Parse(jsonCategory.CategoryId),
+                        CategoryId = categoryId,
                         CategoryName = jsonCategory.CategoryName.Trim(),
                         Summary = jsonCategory.Summary,
                     };

@@ -30,7 +30,7 @@
         <MyNavMenu />
     </MudDrawer>
     <MudMainContent Class="d-flex flex-column flex-grow-1">
-        <MudContainer MaxWidth="MaxWidth.False" Class="flex-grow-1">
+        <MudContainer MaxWidth="MaxWidth.False" Class="flex-grow-1 d-flex flex-column" Style="min-height: 0;">
             @if (!DataService.IsLoading)
             {
                 @Body

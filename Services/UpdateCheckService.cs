@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 
-namespace PCCustomizer.Services 
+namespace PCCustomizer.Services
 {
     /// <summary>
     /// 檢查github release是否有更新服務
@@ -91,6 +91,10 @@ namespace PCCustomizer.Services
                             await Browser.Default.OpenAsync(DownloadUrl, BrowserLaunchMode.SystemPreferred);
                         }
                     });
+                }
+                else
+                {
+                    Debug.WriteLine("已經是最新版本");
                 }
             }
             catch (Exception ex)
