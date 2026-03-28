@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using PCCustomizer.Data;
 using PCCustomizer.Models;
 using PCCustomizer.Models.DTOs;
-using PCCustomizer.Tools;
 using System.Diagnostics;
 
 namespace PCCustomizer.Services
@@ -13,9 +12,9 @@ namespace PCCustomizer.Services
     /// </summary>
     /// <seealso cref="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" />
     /// <seealso cref="PCCustomizer.Services.IMenuService" />
-    public class MenuService(AppDbContext dbContext, INotificationService notificationService) : ObservableObject, IMenuService
+    public class MenuService(AppDbContext dbContext, INotificationService notificationService, ICoolPcService coolPcService) : ObservableObject, IMenuService
     {
-        private readonly static string CoolPC = "https://www.coolpc.com.tw/tmp/";
+        private static readonly string CoolPC = "https://www.coolpc.com.tw/tmp/";
 
         private bool _isLoading = false;
         public bool IsLoading
@@ -145,7 +144,7 @@ namespace PCCustomizer.Services
             }
         }
 
-        public async Task<List<Dictionary<string, List<MenuProduct>>>> GetDictMyMenu(MenuCategory menuCategory)
+        public async Task<Dictionary<string, List<MenuProduct>>> GetDictMyMenu(MenuCategory menuCategory)
         {
             try
             {
@@ -158,18 +157,10 @@ namespace PCCustomizer.Services
                     .FirstOrDefaultAsync(x => x.Id == menuCategory.Id);
                 if (fineMenuCategory == null) return [];
                 var menus = fineMenuCategory.MenuProducts.OrderBy(x => x.CategoryId).ToList();
-                var filterCategory = menus.DistinctBy(x => x.CategoryId).ToList();
-                var result = new List<Dictionary<string, List<MenuProduct>>>();
-                foreach (var category in filterCategory)
+                var result = new Dictionary<string, List<MenuProduct>>();
+                foreach (var category in menus.DistinctBy(x => x.CategoryId))
                 {
-                    var menuProductList = menus.Where(x => x.CategoryId == category.CategoryId).ToList();
-                    result.Add(new Dictionary<string, List<MenuProduct>>
-                    {
-                        {
-                            category.CategoryName,
-                            menuProductList
-                        }
-                    });
+                    result[category.CategoryName] = menus.Where(x => x.CategoryId == category.CategoryId).ToList();
                 }
 
                 return result;
@@ -181,7 +172,7 @@ namespace PCCustomizer.Services
             }
         }
 
-        public async Task<List<MyMenuCategoryDTO>> GetMyMenuCtegoryDTOs()
+        public async Task<List<MyMenuCategoryDTO>> GetMyMenuCategoryDTOs()
         {
             try
             {
@@ -189,6 +180,14 @@ namespace PCCustomizer.Services
                 var result = new List<MyMenuCategoryDTO>();
                 foreach (var menuCategory in myMenuCategories)
                 {
+                    // 直接使用已載入的 MenuProducts 在記憶體中建立 Dictionary，避免 N+1 查詢
+                    var menus = menuCategory.MenuProducts.OrderBy(x => x.CategoryId).ToList();
+                    var menuProductsDict = new Dictionary<string, List<MenuProduct>>();
+                    foreach (var category in menus.DistinctBy(x => x.CategoryId))
+                    {
+                        menuProductsDict[category.CategoryName] = menus.Where(x => x.CategoryId == category.CategoryId).ToList();
+                    }
+
                     result.Add(new MyMenuCategoryDTO
                     {
                         Id = menuCategory.Id,
@@ -197,7 +196,7 @@ namespace PCCustomizer.Services
                         IsSend = menuCategory.IsSend,
                         HtmUrl = menuCategory.HtmUrl,
                         PngUrl = menuCategory.PngUrl,
-                        MyMenuProducts = await GetDictMyMenu(menuCategory)
+                        MyMenuProducts = menuProductsDict
                     });
                 }
 
@@ -247,19 +246,16 @@ namespace PCCustomizer.Services
                 {
                     findMenuCategory.Name = myMenuCategoryDTO.Name;
                     findMenuCategory.ReviseDate = DateTime.Now;
-                    foreach (var editCategory in myMenuCategoryDTO.MyMenuProducts)
+                    foreach (var (key, value) in myMenuCategoryDTO.MyMenuProducts)
                     {
-                        foreach (var (key, value) in editCategory)
+                        foreach (var editProduct in value)
                         {
-                            foreach (var editProduct in value)
+                            if (editProduct.Qty <= 0) continue;
+                            var fineMenuProduct = findMenuProducts.FirstOrDefault(x => x.ProductName == editProduct.ProductName
+                            && x.CategoryName == key);
+                            if (fineMenuProduct != null)
                             {
-                                if (editProduct.Qty <= 0) continue;
-                                var fineMenuProduct = findMenuProducts.FirstOrDefault(x => x.ProductName == editProduct.ProductName
-                                && x.CategoryName == key);
-                                if (fineMenuProduct != null)
-                                {
-                                    fineMenuProduct.Qty = editProduct.Qty;
-                                }
+                                fineMenuProduct.Qty = editProduct.Qty;
                             }
                         }
                     }
@@ -287,8 +283,8 @@ namespace PCCustomizer.Services
                 IsLoading = true;
                 var findMenu = await dbContext.MenuCategory.Include(x => x.MenuProducts).FirstOrDefaultAsync(x => x.Id == id);
                 if (findMenu == null) return;
-                var payloadStr = CoolPcWebUtility.BuildPayLoad(findMenu.MenuProducts).Trim();
-                var cookie = await CoolPcWebUtility.GetCoolPcSessionIdAsync();
+                var payloadStr = coolPcService.BuildPayload(findMenu.MenuProducts).Trim();
+                var cookie = await coolPcService.GetSessionIdAsync();
                 string htmUrl = "";
                 string pngUrl = "";
                 //由於網址和圖片的名稱是用js動態產生的，只靠C#不能直接取得，第一次先取得網址
@@ -302,13 +298,19 @@ namespace PCCustomizer.Services
                         { "fname", htmUrl},
                         { "iname", pngUrl}
                     };
-                    var result = await CoolPcWebUtility.SendAndParseEstimateAsync(cookie, payload);
+                    var result = await coolPcService.SendAndParseEstimateAsync(cookie, payload);
                     if (i == 0)
                     {
                         htmUrl = result.GetValueOrDefault().HtmFilename != null ? CoolPC + result.GetValueOrDefault().HtmFilename : null;
                         pngUrl = result.GetValueOrDefault().PngFilename != null ? CoolPC + result.GetValueOrDefault().PngFilename : null;
                     }
                 }
+                if (string.IsNullOrWhiteSpace(htmUrl) && string.IsNullOrWhiteSpace(pngUrl))
+                {
+                    notificationService.ShowError("估價單產生失敗，請稍後再試");
+                    return;
+                }
+
                 findMenu.HtmUrl = htmUrl;
                 findMenu.PngUrl = pngUrl;
                 findMenu.IsSend = true;

@@ -33,7 +33,7 @@ else
         {
             <MudItem xs="12" lg="6">
                 <MudCard Elevation="3" Outlined="true"
-                         Style="height: 600px; display: flex; flex-direction: column;">
+                         Style="min-height: 300px; max-height: 600px; display: flex; flex-direction: column;">
                     <MudCardHeader>
                         <CardHeaderContent>
                             @if (currentlyEditingCardId == category.Id)
@@ -108,58 +108,55 @@ else
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var myMenu in category.MyMenuProducts)
+                                    @foreach (var (key, value) in category.MyMenuProducts)
                                     {
-                                        @foreach (var (key, value) in myMenu)
+                                        @for (int i = 0; i < value.Count; i++)
                                         {
-                                            @for (int i = 0; i < value.Count; i++)
+                                            var item = value[i];
+                                            @if (i == 0)
                                             {
-                                                var item = value[i];
-                                                @if (i == 0)
-                                                {
-                                                    <tr>
-                                                        <td rowspan="@value.Count">@key</td>
-                                                        <td>@item.ProductName</td>
-                                                        <td>@item.ProductPrice</td>
-                                                        <td>
-                                                            <MudStack Row="true" AlignItems="AlignItems.Center">
-                                                                <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                                                                 Style="width:80px;" Step="1" Min="1"
-                                                                                 @bind-Value="item.Qty"
-                                                                                 Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" />
-                                                                @if (currentlyEditingCardId == category.Id)
-                                                                {
-                                                                    <MudIconButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
-                                                                                   Icon="@Icons.Material.Filled.Delete"
-                                                                                   OnClick="@(() => DeleteProduct(item))"
-                                                                                   Disabled="@(DeleteProducts.Any(x => x.Id == item.Id) || category.IsSend)" />
-                                                                }
-                                                            </MudStack>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                                else
-                                                {
-                                                    <tr>
-                                                        <td>@item.ProductName</td>
-                                                        <td>@item.ProductPrice</td>
-                                                        <td>
-                                                            <MudStack Row="true" AlignItems="AlignItems.Center">
-                                                                <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                                                                 Style="width:80px;" Step="1" Min="1"
-                                                                                 @bind-Value="item.Qty"
-                                                                                 Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" />
-                                                                @if (currentlyEditingCardId == category.Id)
-                                                                {
-                                                                    <MudIconButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
-                                                                                   Icon="@Icons.Material.Filled.Delete"
-                                                                                   OnClick="@(() => DeleteProduct(item))"
-                                                                                   Disabled="@(DeleteProducts.Any(x => x.Id == item.Id) || category.IsSend)" />
-                                                                }
-                                                            </MudStack>
-                                                        </td>
-                                                    </tr>
-                                                }
+                                                <tr>
+                                                    <td rowspan="@value.Count">@key</td>
+                                                    <td>@item.ProductName</td>
+                                                    <td>@item.ProductPrice.ToString("N0")</td>
+                                                    <td>
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                                            <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                                             Style="width:80px;" Step="1" Min="1"
+                                                                             @bind-Value="item.Qty"
+                                                                             Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" />
+                                                            @if (currentlyEditingCardId == category.Id)
+                                                            {
+                                                                <MudIconButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
+                                                                               Icon="@Icons.Material.Filled.Delete"
+                                                                               OnClick="@(() => DeleteProduct(item))"
+                                                                               Disabled="@(DeleteProducts.Any(x => x.Id == item.Id) || category.IsSend)" />
+                                                            }
+                                                        </MudStack>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            else
+                                            {
+                                                <tr>
+                                                    <td>@item.ProductName</td>
+                                                    <td>@item.ProductPrice.ToString("N0")</td>
+                                                    <td>
+                                                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                                                            <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                                             Style="width:80px;" Step="1" Min="1"
+                                                                             @bind-Value="item.Qty"
+                                                                             Disabled="@(currentlyEditingCardId != category.Id || category.IsSend)" />
+                                                            @if (currentlyEditingCardId == category.Id)
+                                                            {
+                                                                <MudIconButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
+                                                                               Icon="@Icons.Material.Filled.Delete"
+                                                                               OnClick="@(() => DeleteProduct(item))"
+                                                                               Disabled="@(DeleteProducts.Any(x => x.Id == item.Id) || category.IsSend)" />
+                                                            }
+                                                        </MudStack>
+                                                    </td>
+                                                </tr>
                                             }
                                         }
                                     }
@@ -179,11 +176,11 @@ else
                     <MudCardActions Class="flex-column pa-3" Style="flex-shrink: 0;">
                         <MudStack Row="true" Style="width: 100%;">
                             <MudText Typo="Typo.subtitle1" Color="Color.Info">
-                                總計: <b>@(category.MyMenuProducts.Sum(m => m.Sum(k => k.Value.Sum(p => p.Qty))))</b> 項商品
+                                總計: <b>@(category.MyMenuProducts.Sum(k => k.Value.Sum(p => p.Qty)))</b> 項商品
                             </MudText>
                             <MudSpacer />
                             <MudText Typo="Typo.subtitle1" Color="Color.Info">
-                                總金額: <b>$@(category.MyMenuProducts.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty))).ToString("N0"))</b>
+                                總金額: <b>$@(category.MyMenuProducts.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty)).ToString("N0"))</b>
                             </MudText>
                         </MudStack>
                         @if (MenuService.IsLoading)
@@ -233,7 +230,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         MenuService.OnStateChanged += StateHasChanged;
-        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+        MyAllMenu = await MenuService.GetMyMenuCategoryDTOs();
 
         await base.OnInitializedAsync();
     }
@@ -242,7 +239,7 @@ else
     private async Task AddNewCategory()
     {
         await MenuService.AddMenuCategory();
-        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+        MyAllMenu = await MenuService.GetMyMenuCategoryDTOs();
     }
 
     // 開始編輯
@@ -266,7 +263,7 @@ else
         originalCategoryName = "";
 
         // 3. 重新載入資料以確認
-        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+        MyAllMenu = await MenuService.GetMyMenuCategoryDTOs();
     }
 
     // 取消編輯
@@ -292,7 +289,7 @@ else
     private async Task SendMenu(int menuId)
     {
         await MenuService.SendMenu(menuId);
-        MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+        MyAllMenu = await MenuService.GetMyMenuCategoryDTOs();
         var category = MyAllMenu.FirstOrDefault(x => x.Id == menuId);
         CancelEdit(category);
     }
@@ -310,7 +307,7 @@ else
         if (result == true)
         {
             await MenuService.DeleteMenuCategory(menuCategory.Id);
-            MyAllMenu = await MenuService.GetMyMenuCtegoryDTOs();
+            MyAllMenu = await MenuService.GetMyMenuCategoryDTOs();
         }
     }
 

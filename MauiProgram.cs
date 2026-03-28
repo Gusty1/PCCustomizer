@@ -32,14 +32,21 @@ namespace PCCustomizer
             {
                 client.DefaultRequestHeaders.Add("User-Agent", "PCCustomizer");
             });
+            builder.Services.AddHttpClient<ICoolPcService, CoolPcService>(client =>
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36");
+                client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+                client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7");
+            })
+            // 停用自動 Cookie 管理，讓程式碼手動傳遞 Cookie 標頭（與原設計一致）
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false });
             builder.Services.AddSingleton<IThemeService, ThemeService>();
             builder.Services.AddSingleton<IHardwareService, HardwareService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IMenuService, MenuService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             var dbPath = Path.Combine(FileSystem.AppDataDirectory, "PCCustomizer.db3");
-            // 如果table有更新，記得去這個路徑把PCCustomizer.db3刪掉，系統打開會自己重建
-            // C:\Users\Gusty\AppData\Local\Packages\com.companyname.pccustomizer_9zz4h110yvjzm\LocalState\PCCustomizer.db3
+            // 如果 table 結構有更新，請刪除 AppDataDirectory 下的 PCCustomizer.db3，系統啟動時會自動重建
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite($"Data Source={dbPath}"));
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

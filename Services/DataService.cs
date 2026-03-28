@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using PCCustomizer.Data;
 using PCCustomizer.Models;
 using PCCustomizer.Models.DTOs;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace PCCustomizer.Services
 {
@@ -55,7 +55,7 @@ namespace PCCustomizer.Services
 
                 Debug.WriteLine("所有相關資料表已清空，開始從網路獲取新資料...");
                 var jsonResponse = await httpClient.GetStringAsync(ProductDataUrl);
-                var parsedJson = JsonConvert.DeserializeObject<List<CategoryDTO>>(jsonResponse);
+                var parsedJson = JsonSerializer.Deserialize<List<CategoryDTO>>(jsonResponse);
                 if (parsedJson == null || parsedJson.Count == 0)
                 {
                     Debug.WriteLine("從 JSON 讀取的資料為空。");

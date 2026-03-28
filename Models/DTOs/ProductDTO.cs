@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace PCCustomizer.Models.DTOs
 {
@@ -7,34 +7,34 @@ namespace PCCustomizer.Models.DTOs
     /// </summary>
     public class ProductDTO
     {
-        [JsonProperty("index")]
+        [JsonPropertyName("index")]
         public required string Index { get; set; }
 
-        [JsonProperty("group")]
+        [JsonPropertyName("group")]
         public string? Group { get; set; }
 
-        [JsonProperty("price")]
+        [JsonPropertyName("price")]
         public int? Price { get; set; }
 
-        [JsonProperty("discount_amount")]
+        [JsonPropertyName("discount_amount")]
         public int? Discount { get; set; }
 
-        [JsonProperty("markers")]
+        [JsonPropertyName("markers")]
         public List<string>? Markers { get; set; }
 
-        [JsonProperty("raw_text")]
+        [JsonPropertyName("raw_text")]
         public string? RawText { get; set; }
 
-        [JsonProperty("full_text")]
+        [JsonPropertyName("full_text")]
         public string? FullText { get; set; }
 
-        [JsonProperty("img_url")]
+        [JsonPropertyName("img_url")]
         public string? ImgUrl { get; set; }
 
-        [JsonProperty("product_url")]
+        [JsonPropertyName("product_url")]
         public string? ProductUrl { get; set; }
 
-        [JsonProperty("details")]
+        [JsonPropertyName("details")]
         public List<string>? Details { get; set; }
     }
 }

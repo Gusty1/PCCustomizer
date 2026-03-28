@@ -55,6 +55,35 @@ namespace PCCustomizer.Services
         }
 
         /// <summary>
+        /// 實作：以傳入的已知最新版本號顯示更新通知，避免重複呼叫 GitHub API。
+        /// </summary>
+        public async Task NotifyUpdateAvailableAsync(string latestVersionStr)
+        {
+            try
+            {
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    bool goToDownload = await Application.Current.MainPage.DisplayAlert(
+                        "發現新版本",
+                        $"PCCustomizer {latestVersionStr} 已經發布了！\n\n" +
+                        $"您目前使用的是 {AppInfo.Current.VersionString}。\n" +
+                        "是否前往 GitHub 下載頁面？",
+                        "前往下載",
+                        "稍後再說");
+
+                    if (goToDownload)
+                    {
+                        await Browser.Default.OpenAsync(DownloadUrl, BrowserLaunchMode.SystemPreferred);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception in NotifyUpdateAvailableAsync: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 實作：檢查並彈出通知。
         /// </summary>
         public async Task CheckAndNotifyUpdatesAsync()
