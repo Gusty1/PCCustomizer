@@ -28,9 +28,15 @@ namespace PCCustomizer
                 // 這是 GitHub API 要求的標頭
                 client.DefaultRequestHeaders.Add("User-Agent", "PCCustomizer-Update-Check");
             });
-            builder.Services.AddHttpClient<IDataService, DataService>(client =>
+            builder.Services.AddHttpClient("DataService", client =>
             {
                 client.DefaultRequestHeaders.Add("User-Agent", "PCCustomizer");
+            });
+            builder.Services.AddSingleton<IDataService>(sp =>
+            {
+                var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+                var httpClient = httpClientFactory.CreateClient("DataService");
+                return new DataService(httpClient, sp);
             });
             builder.Services.AddHttpClient<ICoolPcService, CoolPcService>(client =>
             {

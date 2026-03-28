@@ -1,0 +1,29 @@
+@implements IDisposable
+@inject IDataService DataService
+
+@* 載入遮罩：使用 Fixed 定位覆蓋整個視窗 *@
+<MudOverlay Visible="@DataService.IsLoading" DarkBackground="true" ZIndex="9999"
+            Style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
+    <MudStack AlignItems="AlignItems.Center" Spacing="3">
+        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
+        <MudText Typo="Typo.h5" Color="Color.Secondary">更新原價屋資訊中...</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Tertiary">請耐心等待</MudText>
+    </MudStack>
+</MudOverlay>
+
+@code {
+    protected override void OnInitialized()
+    {
+        DataService.OnStateChanged += HandleStateChanged;
+    }
+
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        DataService.OnStateChanged -= HandleStateChanged;
+    }
+}

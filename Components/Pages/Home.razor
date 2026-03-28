@@ -120,36 +120,47 @@
 
     protected override async Task OnInitializedAsync()
     {
-        DataService.OnStateChanged += StateHasChanged;
+        // 訂閱事件
+        DataService.OnStateChanged += HandleDataStateChanged;
         MenuService.OnStateChanged += HandleMenuStateChanged;
 
-        //獲取當前菜單的簡易顯示
+        // 取得菜單資料（不依賴商品資料）
         myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
-
-        // 載入商品初始資料
-        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
-        //取得當前的菜單資料
         await MenuService.GetMenuCategoriesAsync();
 
-        // 還原上次選擇的菜單，若無紀錄或已被刪除則預設第一個可用的
+        // 還原上次選擇的菜單
         if (MenuService.MenuCategories is not null && MenuService.MenuCategories.Any())
         {
             var lastMenuId = Preferences.Get("LastMenuId", -1);
-            var restoredMenu = MenuService.MenuCategories.FirstOrDefault(m => m.Id == lastMenuId && !m.IsSend)
+            currentMenuCategory = MenuService.MenuCategories.FirstOrDefault(m => m.Id == lastMenuId && !m.IsSend)
                                ?? MenuService.MenuCategories.FirstOrDefault(m => !m.IsSend)
                                ?? MenuService.MenuCategories.First();
-            await OnCurrentMenuChanged(restoredMenu);
+            Preferences.Set("LastMenuId", currentMenuCategory?.Id ?? -1);
         }
 
-        // 還原上次選擇的主分類，若無紀錄則預設第一個
-        if (categories.Any())
+        // 若 DataService 此時已完成，直接載入商品
+        // 若仍在載入中，HandleDataStateChanged 會在完成時觸發載入
+        if (!DataService.IsLoading)
         {
-            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
-            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
-                               ?? categories.First();
+            await LoadCategoriesAndRestoreSelectionAsync();
         }
 
         await base.OnInitializedAsync();
+    }
+
+    // 從 DB 載入分類資料並還原上次選擇的分類，可被初始化和 DataService 完成事件共用
+    private async Task LoadCategoriesAndRestoreSelectionAsync()
+    {
+        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
+        myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
+
+        if (categories.Any())
+        {
+            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
+            // SelectedCategory setter 會同步更新 subcategories
+            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                               ?? categories.First();
+        }
     }
 
     // 這是 MudSelect 的 ValueChanged 事件處理常式
@@ -176,18 +187,30 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    //更新原價物價格資料
+    //更新原價屋價格資料
+    // _isManualUpdate 旗標防止 HandleDataStateChanged 重複載入
+    private bool _isManualUpdate = false;
     private async Task UpdateData()
     {
-        SelectedCategory = null;
-        await DataService.SeedDataIfNeededAsync();
-        // 更新完成後重新載入資料並還原分類選擇
-        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
-        if (categories.Any())
+        _isManualUpdate = true;
+        try
         {
-            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
-            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
-                               ?? categories.First();
+            // 先清空選擇，讓 MudTabs 消失，避免後續中間渲染導致 panel 累積
+            SelectedCategory = null;
+            await DataService.SeedDataIfNeededAsync();
+            // 更新完成後重新載入資料並還原分類選擇
+            categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
+            myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
+            if (categories.Any())
+            {
+                var lastCategoryId = Preferences.Get("LastCategoryId", -1);
+                SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                                   ?? categories.First();
+            }
+        }
+        finally
+        {
+            _isManualUpdate = false;
         }
     }
 
@@ -198,6 +221,31 @@
         if (MenuService.MenuCategories.Any() && MenuService.MenuCategories.Count == 1)
         {
             currentMenuCategory = MenuService.MenuCategories.FirstOrDefault();
+        }
+    }
+
+    // 當 DataService 的 IsLoading 狀態改變時觸發
+    // 僅用於啟動時的自動載入（MainLayout 的 fire-and-forget SeedDataIfNeededAsync）
+    // 手動更新（UpdateData）由 UpdateData 自己完整處理，此處跳過
+    private async void HandleDataStateChanged()
+    {
+        // 手動更新時完全不干預，避免中間狀態渲染導致 MudTabs panel 累積
+        if (_isManualUpdate) return;
+
+        if (DataService.IsLoading) return;
+
+        // DataService 完成（IsLoading false），重新載入商品資料（僅用於啟動時的自動載入）
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadCategoriesAndRestoreSelectionAsync();
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"HandleDataStateChanged 發生錯誤: {ex.Message}");
         }
     }
 
@@ -231,7 +279,7 @@
     public void Dispose()
     {
         // 確保在 Dispose 時也移除所有訂閱
-        DataService.OnStateChanged -= StateHasChanged;
+        DataService.OnStateChanged -= HandleDataStateChanged;
         MenuService.OnStateChanged -= HandleMenuStateChanged;
     }
 }

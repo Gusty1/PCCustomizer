@@ -13,7 +13,7 @@ namespace PCCustomizer.Services
     /// </summary>
     /// <seealso cref="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" />
     /// <seealso cref="IDataService" />
-    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider, INotificationService notificationService) : ObservableObject , IDataService
+    public class DataService(HttpClient httpClient, IServiceProvider serviceProvider) : ObservableObject , IDataService
     {
         private const string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
 
@@ -125,6 +125,9 @@ namespace PCCustomizer.Services
                 {
                     Debug.WriteLine($"--> 內部錯誤訊息: {ex.InnerException.Message}");
                 }
+                // 透過 scope 解析 Scoped 的 NotificationService，避免 Singleton 直接持有 Scoped 服務
+                using var notifyScope = serviceProvider.CreateScope();
+                var notificationService = notifyScope.ServiceProvider.GetRequiredService<INotificationService>();
                 notificationService.ShowError(@"資料更新失敗，請檢查網路連線或稍後再試，若還有問題請聯絡我");
             }
             finally

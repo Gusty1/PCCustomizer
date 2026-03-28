@@ -43,8 +43,6 @@ namespace PCCustomizer.Services
                 using var doc = JsonDocument.Parse(json);
                 string latestVersionStr = doc.RootElement.GetProperty("tag_name").GetString() ?? "0.0.0";
 
-                // 清理版本號 (例如 "v1.0.1" -> "1.0.1")
-                latestVersionStr = latestVersionStr.TrimStart('v');
                 return latestVersionStr;
             }
             catch (Exception ex)

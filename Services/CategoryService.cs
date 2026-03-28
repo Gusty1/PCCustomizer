@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace PCCustomizer.Services
 {
     /// <summary>
-    /// 首頁原價物的商品相關服務的實作
+    /// 首頁原價屋的商品相關服務的實作
     /// </summary>
     /// <seealso cref="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" />
     /// <seealso cref="PCCustomizer.Services.ICategoryService" />
