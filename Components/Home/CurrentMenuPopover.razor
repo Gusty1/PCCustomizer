@@ -1,0 +1,102 @@
+@using PCCustomizer.Models
+
+<div style="position: relative; display: inline-block;"
+     @onmouseenter="() => IsOpenChanged.InvokeAsync(true)">
+    <MudBadge Content="@(CurrentMenuCategory?.MenuProducts?.Sum(m => m.Qty))" Overlap="true" Bordered="true" Color="Color.Info" Class="mx-5">
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="ToggleOpen"
+                   Disabled="@(IsLoading || !CurrentMenuCategory.MenuProducts.Any())">
+            <MudIcon Icon="@Icons.Material.Filled.Menu"></MudIcon>
+            當前菜單
+        </MudButton>
+    </MudBadge>
+    <MudPopover Open="@IsOpen" @onmouseleave="() => IsOpenChanged.InvokeAsync(false)"
+                AnchorOrigin="Origin.BottomLeft"
+                TransformOrigin="Origin.TopRight"
+                MaxHeight="500" Style="overflow: auto">
+        <ChildContent>
+            @if (CurrentMenuCategory is not null && CurrentMenuCategory.MenuProducts.Any())
+            {
+                <MudPaper Class="ma-2 my-2">
+                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="true" FixedHeader="true"
+                                    Style="max-width: 800px; max-height: 400px; overflow: auto;">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 80px;">類別</th>
+                                <th>商品名稱</th>
+                                <th style="min-width: 70px; text-align: right;">價格</th>
+                                <th style="min-width: 50px; text-align: center;">數量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (key, value) in MenuItems)
+                            {
+                                @for (int i = 0; i < value.Count; i++)
+                                {
+                                    var item = value[i]; // 把值提前，razor的渲染機制必須要這樣做
+                                    @if (i == 0)
+                                    {
+                                        <tr>
+                                            <td rowspan="@value.Count">@key</td>
+                                            <td>@item.ProductName</td>
+                                            <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
+                                            <td style="text-align: center;">@item.Qty</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td>@item.ProductName</td>
+                                            <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
+                                            <td style="text-align: center;">@item.Qty</td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                    <MudDivider Class="my-2" />
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText Class="ma-2">
+                            共 <b>@(MenuItems.Sum(k => k.Value.Sum(p => p.Qty)))</b> 項商品
+                        </MudText>
+                        <MudSpacer />
+                        <MudText Class="ma-2">
+                            總計: <b>$@(MenuItems.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty)).ToString("N0"))</b>
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudItem Class="mx-2 my-2">
+                    <MudText Color="Color.Secondary" Typo="Typo.subtitle1">沒有任何商品</MudText>
+                </MudItem>
+            }
+        </ChildContent>
+    </MudPopover>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public MenuCategory CurrentMenuCategory { get; set; } = default!;
+
+    /// <summary>Popover 開關的字典資料（依類別分組的菜單商品）。</summary>
+    [Parameter, EditorRequired]
+    public Dictionary<string, List<MenuProduct>> MenuItems { get; set; } = [];
+
+    /// <summary>Popover 是否開啟，支援 @bind-IsOpen 雙向綁定。</summary>
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    /// <summary>資料載入中時停用按鈕。</summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    private async Task ToggleOpen()
+    {
+        await IsOpenChanged.InvokeAsync(!IsOpen);
+    }
+}

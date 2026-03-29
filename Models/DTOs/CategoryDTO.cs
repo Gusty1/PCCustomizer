@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace PCCustomizer.Models.DTOs
 {
@@ -7,16 +7,16 @@ namespace PCCustomizer.Models.DTOs
     /// </summary>
     public class CategoryDTO
     {
-        [JsonProperty("category_id")]
+        [JsonPropertyName("category_id")]
         public required string CategoryId { get; set; }
 
-        [JsonProperty("category_name")]
+        [JsonPropertyName("category_name")]
         public required string CategoryName { get; set; }
 
-        [JsonProperty("summary")]
+        [JsonPropertyName("summary")]
         public required string Summary { get; set; }
 
-        [JsonProperty("subcategories")]
+        [JsonPropertyName("subcategories")]
         public List<SubcategoryDTO>? Subcategories { get; set; }
     }
 }

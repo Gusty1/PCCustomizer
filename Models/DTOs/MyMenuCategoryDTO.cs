@@ -16,6 +16,6 @@ namespace PCCustomizer.Models.DTOs
 
         public string? PngUrl { get; set; }
 
-        public List<Dictionary<string, List<MenuProduct>>> MyMenuProducts { get; set; } = [];
+        public Dictionary<string, List<MenuProduct>> MyMenuProducts { get; set; } = [];
     }
 }

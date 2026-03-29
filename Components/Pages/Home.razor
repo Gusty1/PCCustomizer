@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using PCCustomizer.Models
 @using PCCustomizer.Models.DTOs
+@using System.Diagnostics
 @inject IDataService DataService
 @inject ICategoryService CategoryService
 @inject IMenuService MenuService
@@ -46,14 +47,14 @@
             }
         </MudItem>
         <MudItem Class="flex-grow-1 d-flex justify-end align-center">
-            <MudButton Variant="Variant.Filled" OnClick="AddNewCategory" Disabled="@DataService.IsLoading">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddNewCategory" Disabled="@DataService.IsLoading">
                 <MudIcon Icon="@Icons.Material.Filled.Add"/>
                 新增菜單
             </MudButton>
             @if (MenuService.MenuCategories is not null && MenuService.MenuCategories.Any())
             {
                 <MudItem Class="mx-2">
-                    <MudSelect T="MenuCategory?" Value="CurrentMenuCategory" ValueChanged="OnCurrentMenuChanged"
+                    <MudSelect T="MenuCategory?" Value="currentMenuCategory" ValueChanged="OnCurrentMenuChanged"
                                Label="菜單" Variant="Variant.Filled" FitContent="true"
                                Disabled="@DataService.IsLoading">
                         @foreach (var menu in MenuService.MenuCategories)
@@ -67,102 +68,17 @@
             }
             @if (currentMenuCategory is not null)
             {
-                <div style="position: relative; display: inline-block;"
-                     @onmouseenter="() => _popoverOpen = true">
-                    <MudBadge Content="@(currentMenuCategory?.MenuProducts?.Sum(m => m.Qty))" Overlap="true" Bordered="true" Color="Color.Info" Class="mx-5">
-                        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="TogglePopover"
-                                   Disabled="@(DataService.IsLoading || !currentMenuCategory.MenuProducts.Any())">
-                            <MudIcon Icon="@Icons.Material.Filled.Menu"></MudIcon>
-                            當前菜單
-                        </MudButton>
-                    </MudBadge>
-                    <MudPopover Open="@_popoverOpen" @onmouseleave="() => _popoverOpen = false"
-                                AnchorOrigin="Origin.BottomLeft"
-                                TransformOrigin="Origin.TopRight"
-                                MaxHeight="500" Style="overflow: auto">
-                        <ChildContent>
-                            @if (currentMenuCategory is not null && currentMenuCategory.MenuProducts.Any())
-                            {
-                                <MudPaper Class="ma-2 my-2">
-                                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="true" FixedHeader="true"
-                                                     Style="max-width: 800px; max-height: 400px; overflow: auto;">
-                                        <thead>
-                                            <tr>
-                                                <th style="min-width: 80px;">類別</th>
-                                                <th>商品名稱</th>
-                                                <th style="min-width: 70px; text-align: right;">價格</th>
-                                                <th style="min-width: 50px; text-align: center;">數量</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var myMenu in myMenus)
-                                            {
-                                                @foreach (var (key, value) in myMenu)
-                                                {
-                                                    @for (int i = 0; i < value.Count; i++)
-                                                    {
-                                                        var item = value[i]; // 把值提前，razor的渲染機制必須要這樣做
-                                                        @if (i == 0)
-                                                        {
-                                                            <tr>
-                                                                <td rowspan="@value.Count">@key</td>
-                                                                <td>@item.ProductName</td>
-                                                                <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
-                                                                <td style="text-align: center;">@item.Qty</td>
-                                                            </tr>
-                                                        }
-                                                        else
-                                                        {
-                                                            <tr>
-                                                                <td>@item.ProductName</td>
-                                                                <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
-                                                                <td style="text-align: center;">@item.Qty</td>
-                                                            </tr>
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        </tbody>
-                                    </MudSimpleTable>
-                                    <MudDivider Class="my-2" />
-                                    <MudStack Row="true" AlignItems="AlignItems.Center">
-                                        <MudText Class="ma-2">
-                                            共 <b>@(myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.Qty))))</b> 項商品
-                                        </MudText>
-                                        <MudSpacer />
-                                        <MudText Class="ma-2">
-                                            總計: <b>$@(myMenus.Sum(m => m.Sum(k => k.Value.Sum(p => p.ProductPrice * p.Qty))).ToString("N0"))</b>
-                                        </MudText>
-                                    </MudStack>
-                                </MudPaper>
-                            }
-                            else
-                            {
-                                <MudItem Class="mx-2 my-2">
-                                    <MudText Color="Color.Secondary" Typo="Typo.subtitle1">沒有任何商品</MudText>
-                                </MudItem>
-                            }
-                        </ChildContent>
-                    </MudPopover>
-                </div>
+                <CurrentMenuPopover CurrentMenuCategory="@currentMenuCategory"
+                                    MenuItems="@myMenus"
+                                    @bind-IsOpen="_popoverOpen"
+                                    IsLoading="@DataService.IsLoading" />
             }
         </MudItem>
     </MudGrid>
 
     <div style="flex: 1 1 0; min-height: 0; overflow: hidden; display: flex;">
-        @if (DataService.IsLoading)
-        {
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-4">更新原價屋資訊中...</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Tertiary" Class="mt-1">請耐心等待</MudText>
-            </div>
-        }
-        else
-        {
-            <ProductContent Subcategories="@subcategories" SelectedCategory="@selectedCategory"
-                            CurrentMenuCategory="@currentMenuCategory" />
-        }
+        <ProductContent Subcategories="@subcategories" SelectedCategory="@selectedCategory"
+                        CurrentMenuCategory="@currentMenuCategory" />
     </div>
 
 </MudPaper>
@@ -174,18 +90,8 @@
 @code {
     private List<MyCategoryDTO> categories = new();
     private List<MySubcategoryDTO> subcategories = new();
-    private List<Dictionary<string, List<MenuProduct>>> myMenus = new();
-    // 這是私有支援欄位 (backing field)，看起來是C#就一定要這樣寫
+    private Dictionary<string, List<MenuProduct>> myMenus = new();
     private MenuCategory? currentMenuCategory = null;
-    // 這是公用屬性，給 <MudSelect> 的 Value 參數讀取
-    private MenuCategory? CurrentMenuCategory
-    {
-        get => currentMenuCategory;
-        set
-        {
-            currentMenuCategory = value;
-        }
-    }
 
     // 這是真正儲存值的私有欄位 (小寫開頭)
     private MyCategoryDTO? selectedCategory;
@@ -205,50 +111,56 @@
             {
                 Preferences.Set("LastCategoryId", selectedCategory.CategoryId);
                 //選擇主目錄時切換對應的子目錄
-                subcategories = categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>();
-                subcategories.OrderBy(s => s.CategoryId);
+                subcategories = (categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>())
+                    .OrderBy(s => s.CategoryId).ToList();
             }
         }
     }
     private bool _popoverOpen = false;
 
-    private void TogglePopover()
-    {
-        _popoverOpen = !_popoverOpen;
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        DataService.OnStateChanged += StateHasChanged;
+        // 訂閱事件
+        DataService.OnStateChanged += HandleDataStateChanged;
         MenuService.OnStateChanged += HandleMenuStateChanged;
 
-        //獲取當前菜單的簡易顯示
+        // 取得菜單資料（不依賴商品資料）
         myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
-
-        // 載入商品初始資料
-        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
-        //取得當前的菜單資料
         await MenuService.GetMenuCategoriesAsync();
 
-        // 還原上次選擇的菜單，若無紀錄或已被刪除則預設第一個可用的
+        // 還原上次選擇的菜單
         if (MenuService.MenuCategories is not null && MenuService.MenuCategories.Any())
         {
             var lastMenuId = Preferences.Get("LastMenuId", -1);
-            var restoredMenu = MenuService.MenuCategories.FirstOrDefault(m => m.Id == lastMenuId && !m.IsSend)
+            currentMenuCategory = MenuService.MenuCategories.FirstOrDefault(m => m.Id == lastMenuId && !m.IsSend)
                                ?? MenuService.MenuCategories.FirstOrDefault(m => !m.IsSend)
                                ?? MenuService.MenuCategories.First();
-            await OnCurrentMenuChanged(restoredMenu);
+            Preferences.Set("LastMenuId", currentMenuCategory?.Id ?? -1);
         }
 
-        // 還原上次選擇的主分類，若無紀錄則預設第一個
-        if (categories.Any())
+        // 若 DataService 此時已完成，直接載入商品
+        // 若仍在載入中，HandleDataStateChanged 會在完成時觸發載入
+        if (!DataService.IsLoading)
         {
-            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
-            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
-                               ?? categories.First();
+            await LoadCategoriesAndRestoreSelectionAsync();
         }
 
         await base.OnInitializedAsync();
+    }
+
+    // 從 DB 載入分類資料並還原上次選擇的分類，可被初始化和 DataService 完成事件共用
+    private async Task LoadCategoriesAndRestoreSelectionAsync()
+    {
+        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
+        myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
+
+        if (categories.Any())
+        {
+            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
+            // SelectedCategory setter 會同步更新 subcategories
+            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                               ?? categories.First();
+        }
     }
 
     // 這是 MudSelect 的 ValueChanged 事件處理常式
@@ -267,26 +179,38 @@
         // 4. 同步更新 subcategories
         if (selectedCategory is not null)
         {
-            subcategories = categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>();
-            subcategories.OrderBy(s => s.CategoryId);
+            subcategories = (categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>())
+                .OrderBy(s => s.CategoryId).ToList();
         }
 
         // 5. 通知 Blazor 畫面需要重新渲染
         await InvokeAsync(StateHasChanged);
     }
 
-    //更新原價物價格資料
+    //更新原價屋價格資料
+    // _isManualUpdate 旗標防止 HandleDataStateChanged 重複載入
+    private bool _isManualUpdate = false;
     private async Task UpdateData()
     {
-        SelectedCategory = null;
-        await DataService.SeedDataIfNeededAsync();
-        // 更新完成後重新載入資料並還原分類選擇
-        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
-        if (categories.Any())
+        _isManualUpdate = true;
+        try
         {
-            var lastCategoryId = Preferences.Get("LastCategoryId", -1);
-            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
-                               ?? categories.First();
+            // 先清空選擇，讓 MudTabs 消失，避免後續中間渲染導致 panel 累積
+            SelectedCategory = null;
+            await DataService.SeedDataIfNeededAsync();
+            // 更新完成後重新載入資料並還原分類選擇
+            categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
+            myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
+            if (categories.Any())
+            {
+                var lastCategoryId = Preferences.Get("LastCategoryId", -1);
+                SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                                   ?? categories.First();
+            }
+        }
+        finally
+        {
+            _isManualUpdate = false;
         }
     }
 
@@ -300,30 +224,62 @@
         }
     }
 
+    // 當 DataService 的 IsLoading 狀態改變時觸發
+    // 僅用於啟動時的自動載入（MainLayout 的 fire-and-forget SeedDataIfNeededAsync）
+    // 手動更新（UpdateData）由 UpdateData 自己完整處理，此處跳過
+    private async void HandleDataStateChanged()
+    {
+        // 手動更新時完全不干預，避免中間狀態渲染導致 MudTabs panel 累積
+        if (_isManualUpdate) return;
+
+        if (DataService.IsLoading) return;
+
+        // DataService 完成（IsLoading false），重新載入商品資料（僅用於啟動時的自動載入）
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadCategoriesAndRestoreSelectionAsync();
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"HandleDataStateChanged 發生錯誤: {ex.Message}");
+        }
+    }
+
     // 當 MenuService 變更時 (例如新增/更新產品)，這個方法會被呼叫
     private async void HandleMenuStateChanged()
     {
-        // 1. 重新呼叫 GetCategoriesWithDetailsAsync，這會重新產生 DTO 列表，並正確計算所有產品的 Qty
-        categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
-        //更新菜單的簡易資料
-        myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
-
-        // 2. 在 'categories' (新資料) 更新後，強制 'subcategories' 也同步更新
-        if (selectedCategory is not null)
+        try
         {
-            // 重新從 'categories' (新資料) 中提取 'subcategories'
-            subcategories = categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>();
-            subcategories.OrderBy(s => s.CategoryId);
-        }
+            // 1. 重新呼叫 GetCategoriesWithDetailsAsync，這會重新產生 DTO 列表，並正確計算所有產品的 Qty
+            categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
+            //更新菜單的簡易資料
+            myMenus = await MenuService.GetDictMyMenu(currentMenuCategory);
 
-        // 3. 告訴 Blazor 重新渲染畫面
-        await InvokeAsync(StateHasChanged);
+            // 2. 在 'categories' (新資料) 更新後，強制 'subcategories' 也同步更新
+            if (selectedCategory is not null)
+            {
+                // 重新從 'categories' (新資料) 中提取 'subcategories'
+                subcategories = (categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>())
+                    .OrderBy(s => s.CategoryId).ToList();
+            }
+
+            // 3. 告訴 Blazor 重新渲染畫面
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"HandleMenuStateChanged 發生錯誤: {ex.Message}");
+        }
     }
 
     public void Dispose()
     {
         // 確保在 Dispose 時也移除所有訂閱
-        DataService.OnStateChanged -= StateHasChanged;
+        DataService.OnStateChanged -= HandleDataStateChanged;
         MenuService.OnStateChanged -= HandleMenuStateChanged;
     }
 }

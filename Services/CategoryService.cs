@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace PCCustomizer.Services
 {
     /// <summary>
-    /// 首頁原價物的商品相關服務的實作
+    /// 首頁原價屋的商品相關服務的實作
     /// </summary>
     /// <seealso cref="CommunityToolkit.Mvvm.ComponentModel.ObservableObject" />
     /// <seealso cref="PCCustomizer.Services.ICategoryService" />
@@ -72,13 +72,17 @@ namespace PCCustomizer.Services
                         }
                         var subcategoryQty = menuCategory != null ? menuCategory.MenuProducts.Where(x => x.SubcategoryName == subcategory.SubcategoryName)
                             .Sum(k => k.Qty) : 0;
-                        mySubcategoryDTOList.Add(new MySubcategoryDTO
+                        var findSubcategory = mySubcategoryDTOList.FirstOrDefault(item => item.SubcategoryName == subcategory.SubcategoryName);
+                        if (findSubcategory == null)
                         {
-                            CategoryId = subcategory.CategoryId,
-                            SubcategoryName = subcategory.SubcategoryName,
-                            Products = myProductDTOList,
-                            Qty = subcategoryQty
-                        });
+                            mySubcategoryDTOList.Add(new MySubcategoryDTO
+                            {
+                                CategoryId = subcategory.CategoryId,
+                                SubcategoryName = subcategory.SubcategoryName,
+                                Products = myProductDTOList,
+                                Qty = subcategoryQty
+                            });
+                        }
                     }
                     myCategoryDTOList.Add(new MyCategoryDTO
                     {

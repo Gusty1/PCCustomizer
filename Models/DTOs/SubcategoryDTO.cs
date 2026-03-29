@@ -1,16 +1,16 @@
-﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
-namespace PCCustomizer.Models.DTOs 
+namespace PCCustomizer.Models.DTOs
 {
     /// <summary>
     /// 獲取json檔案中的子目錄資料
     /// </summary>
     public class SubcategoryDTO
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public required string Name { get; set; }
 
-        [JsonProperty("products")]
+        [JsonPropertyName("products")]
         public List<ProductDTO>? Products { get; set; }
     }
 }

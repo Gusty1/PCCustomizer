@@ -10,17 +10,6 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@* 加上載入遮罩 *@
-<MudOverlay Visible="@DataService.IsLoading" DarkBackground="true" Absolute="true">
-    <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
-        <MudText Typo="Typo.h4" Color="Color.Secondary" Class="me-3">更新原價屋資訊中...</MudText>
-        <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />
-    </MudItem>
-    <MudItem xs="12" md="12" sm="12" Class="d-flex align-center">
-        <MudText Typo="Typo.h6" Color="Color.Tertiary" Class="me-3">請耐心等待</MudText>
-    </MudItem>
-</MudOverlay>
-
 <MudLayout Class="d-flex flex-column">
     <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -31,13 +20,13 @@
     </MudDrawer>
     <MudMainContent Class="d-flex flex-column flex-grow-1">
         <MudContainer MaxWidth="MaxWidth.False" Class="flex-grow-1 d-flex flex-column" Style="min-height: 0;">
-            @if (!DataService.IsLoading)
-            {
-                @Body
-            }
+            @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+
+@* 載入遮罩：獨立元件，自行訂閱 DataService，不會觸發整個 Layout 重新渲染 *@
+<LoadingOverlay />
 
 @code {
     bool _drawerOpen = false; // 側邊欄開關狀態
@@ -53,8 +42,6 @@
         await ThemeService.LoadThemeAsync();
         // 訂閱主題變更事件，當主題變更時，刷新此元件的 UI
         ThemeService.OnChange += StateHasChanged;
-        // 訂閱 DataService 的狀態變更事件
-        DataService.OnStateChanged += StateHasChanged;
         // 獲取商品資料
         _ = DataService.SeedDataIfNeededAsync();
         // 獲取電腦資訊
@@ -68,6 +55,5 @@
     {
         // 取消訂閱，防止記憶體洩漏
         ThemeService.OnChange -= StateHasChanged;
-        DataService.OnStateChanged -= StateHasChanged;
     }
 }

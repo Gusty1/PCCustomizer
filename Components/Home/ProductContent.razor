@@ -29,7 +29,9 @@
                     </TabContent>
                     <ChildContent>
                         <MudTable T="MyProductDTO" Items="@subcategory.Products" Hover="true" Bordered="true" Striped="false"
-                                  Filter="new Func<MyProductDTO, bool>(FilterFunc)" RowsPerPage="50" Class="flex-grow-1">
+                                  Filter="new Func<MyProductDTO, bool>(FilterFunc)" RowsPerPage="50" Class="flex-grow-1"
+                                  RowStyleFunc="@((item, _) => item.Qty > 0 ? "background-color: rgba(76, 175, 80, 0.12);" : "")"
+                                  >
                             <ToolBarContent>
                                 <MudText Typo="Typo.h6">@subcategory.SubcategoryName</MudText>
                                 <MudSpacer />
@@ -50,7 +52,9 @@
                                     </MudTableSortLabel>
                                 </MudTh>
                                 <MudTh>
-                                    @*價格*@
+                                    <MudText Typo="Typo.subtitle1">
+                                        <strong>數量</strong>
+                                    </MudText>
                                 </MudTh>
                             </HeaderContent>
                             <RowTemplate>
@@ -145,7 +149,7 @@
                                 <MudTd DataLabel="">
                                     <MudItem Style="max-width: 80px">
                                         <MudNumericField T="int" Variant="Variant.Outlined" Value="@context.Qty"
-                                            ValueChanged="@((int newQty) => MenuService.AddMenuProduct(CurrentMenuCategory, SelectedCategory,@context, newQty))"
+                                            ValueChanged="@((int newQty) => HandleAddMenuProduct(CurrentMenuCategory, SelectedCategory, context, newQty))"
                                             Disabled="@(CurrentMenuCategory==null)" Margin="Margin.Dense" Step="1" Min="0"/>
                                     </MudItem>
                                 </MudTd>
@@ -180,8 +184,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // 先取消訂閱再訂閱，防止元件重複初始化時事件重複觸發
+        CategoryService.OnStateChanged -= StateHasChanged;
         CategoryService.OnStateChanged += StateHasChanged;
         await base.OnInitializedAsync();
+    }
+
+    private async Task HandleAddMenuProduct(MenuCategory? menuCategory, MyCategoryDTO? selectedCategory, MyProductDTO product, int newQty)
+    {
+        try
+        {
+            await MenuService.AddMenuProduct(menuCategory, selectedCategory, product, newQty);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"HandleAddMenuProduct 發生錯誤: {ex.Message}");
+        }
     }
 
     private async Task OnTabChanged(int newIndex)

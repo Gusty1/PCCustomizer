@@ -10,8 +10,14 @@
 
         /// <summary>
         /// 檢查是否有新版本，如果有，則彈出通知對話框。
-        /// (此方法供 App 啟動時使用)
+        /// (此方法供 App 啟動時使用，內部自行取得最新版本)
         /// </summary>
         Task CheckAndNotifyUpdatesAsync();
+
+        /// <summary>
+        /// 以傳入的已知最新版本號顯示更新通知對話框，避免重複呼叫 GitHub API。
+        /// (此方法供 Setting 頁面手動檢查更新使用)
+        /// </summary>
+        Task NotifyUpdateAvailableAsync(string latestVersionStr);
     }
 }

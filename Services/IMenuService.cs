@@ -21,9 +21,9 @@ namespace PCCustomizer.Services
         Task AddMenuProduct(MenuCategory menuCategory, MyCategoryDTO myCategoryDTO,
             MyProductDTO myProductDTO, int qty);
 
-        Task<List<Dictionary<string, List<MenuProduct>>>> GetDictMyMenu(MenuCategory menuCategory);
+        Task<Dictionary<string, List<MenuProduct>>> GetDictMyMenu(MenuCategory menuCategory);
 
-        Task<List<MyMenuCategoryDTO>> GetMyMenuCtegoryDTOs();
+        Task<List<MyMenuCategoryDTO>> GetMyMenuCategoryDTOs();
 
         Task DeleteMenuCategory(int id);
 
