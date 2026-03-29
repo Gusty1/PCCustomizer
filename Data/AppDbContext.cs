@@ -25,6 +25,13 @@ namespace PCCustomizer.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Category → Subcategory 的外鍵關係：明確設定，避免 AsSplitQuery 產生重複子目錄
+            modelBuilder.Entity<Subcategory>()
+                .HasOne<Category>()
+                .WithMany(c => c.Subcategories)
+                .HasForeignKey(s => s.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // MenuProduct 的外鍵關係：明確設定為 Cascade Delete，
             // 確保刪除 MenuCategory 時其下的 MenuProduct 一同被清除
             modelBuilder.Entity<MenuProduct>()

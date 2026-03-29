@@ -72,13 +72,17 @@ namespace PCCustomizer.Services
                         }
                         var subcategoryQty = menuCategory != null ? menuCategory.MenuProducts.Where(x => x.SubcategoryName == subcategory.SubcategoryName)
                             .Sum(k => k.Qty) : 0;
-                        mySubcategoryDTOList.Add(new MySubcategoryDTO
+                        var findSubcategory = mySubcategoryDTOList.FirstOrDefault(item => item.SubcategoryName == subcategory.SubcategoryName);
+                        if (findSubcategory == null)
                         {
-                            CategoryId = subcategory.CategoryId,
-                            SubcategoryName = subcategory.SubcategoryName,
-                            Products = myProductDTOList,
-                            Qty = subcategoryQty
-                        });
+                            mySubcategoryDTOList.Add(new MySubcategoryDTO
+                            {
+                                CategoryId = subcategory.CategoryId,
+                                SubcategoryName = subcategory.SubcategoryName,
+                                Products = myProductDTOList,
+                                Qty = subcategoryQty
+                            });
+                        }
                     }
                     myCategoryDTOList.Add(new MyCategoryDTO
                     {
