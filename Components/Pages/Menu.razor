@@ -290,8 +290,11 @@ else
     {
         await MenuService.SendMenu(menuId);
         MyAllMenu = await MenuService.GetMyMenuCategoryDTOs();
-        var category = MyAllMenu.FirstOrDefault(x => x.Id == menuId);
-        CancelEdit(category);
+        // 送出後直接重置編輯狀態，不透過 CancelEdit，
+        // 因為 CancelEdit 會將 originalCategoryName（空字串）覆蓋到新載入的名稱
+        currentlyEditingCardId = null;
+        originalCategoryName = "";
+        DeleteProducts = [];
     }
 
     //刪除菜單
