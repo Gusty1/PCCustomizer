@@ -34,7 +34,7 @@
 		<AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PackageCertificateThumbprint>F974912A543B88EC912FC0C8F8ED5C9555EE17B0</PackageCertificateThumbprint>
+		<PackageCertificateThumbprint>34AFD19BC7D53B4503535B975E1B4584BD17F0F5</PackageCertificateThumbprint>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-maccatalyst|AnyCPU'">
