@@ -128,6 +128,7 @@ namespace PCCustomizer.Services
                         SubcategoryName = subcategory.SubcategoryName,
                         ProductName = product.RawText,
                         ProductFullText = product.FullText,
+                        ProductUrl = myProductDTO.ProductUrl,
                         ProductPrice = product.Price ?? 0,
                         Qty = qty,
                     });
@@ -273,6 +274,72 @@ namespace PCCustomizer.Services
             {
                 Debug.WriteLine($"更新菜單資料時發生錯誤: {ex.Message}");
                 notificationService.ShowError($"更新菜單失敗");
+            }
+        }
+
+        public async Task UpdateMenuProductQtyAsync(int menuProductId, int qty)
+        {
+            try
+            {
+                var product = await dbContext.MenuProduct.FirstOrDefaultAsync(x => x.Id == menuProductId);
+                if (product == null) return;
+
+                // 數量最低為 1
+                product.Qty = Math.Max(1, qty);
+
+                // 同步更新所屬菜單的異動時間
+                var menuCategory = await dbContext.MenuCategory.FirstOrDefaultAsync(x => x.Id == product.MenuCategoryId);
+                if (menuCategory != null) menuCategory.ReviseDate = DateTime.Now;
+
+                await dbContext.SaveChangesAsync();
+                await GetMenuCategoriesAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"更新商品數量時發生錯誤: {ex.Message}");
+                notificationService.ShowError("更新數量失敗");
+            }
+        }
+
+        public async Task DeleteMenuProductAsync(int menuProductId)
+        {
+            try
+            {
+                var product = await dbContext.MenuProduct.FirstOrDefaultAsync(x => x.Id == menuProductId);
+                if (product == null) return;
+
+                var menuCategory = await dbContext.MenuCategory.FirstOrDefaultAsync(x => x.Id == product.MenuCategoryId);
+                if (menuCategory != null) menuCategory.ReviseDate = DateTime.Now;
+
+                dbContext.MenuProduct.Remove(product);
+                await dbContext.SaveChangesAsync();
+                await GetMenuCategoriesAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"刪除菜單商品時發生錯誤: {ex.Message}");
+                notificationService.ShowError("刪除商品失敗");
+            }
+        }
+
+        public async Task ClearAllDataAsync()
+        {
+            try
+            {
+                // 刪除所有 MenuProduct（子項），再刪除 MenuCategory（父項）
+                dbContext.MenuProduct.RemoveRange(dbContext.MenuProduct);
+                dbContext.MenuCategory.RemoveRange(dbContext.MenuCategory);
+                await dbContext.SaveChangesAsync();
+
+                // 重新載入（結果為空列表），並觸發 OnStateChanged 通知 UI
+                await GetMenuCategoriesAsync();
+
+                notificationService.ShowSuccess("所有菜單與偏好設定已清除");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"清除資料時發生錯誤: {ex.Message}");
+                notificationService.ShowError("清除資料失敗");
             }
         }
 

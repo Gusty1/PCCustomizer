@@ -3,68 +3,73 @@
 @inject IThemeService ThemeService
 @inject IUpdateCheckService UpdateService
 @inject INotificationService NotificationService
+@inject IMenuService MenuService
+@inject IDialogService DialogService
+@inject IPreferences Preferences
 
-<MudText Typo="Typo.h6">設定</MudText>
+<MudStack Spacing="4" Style="max-width: 480px;">
 
-<MudGrid>
-    <MudItem xs="12" Class="d-flex align-center">
-        @* MudSwitch 雙向綁定到 IsDark 屬性 *@
-        <MudSwitch T="bool" @bind-Value="@IsDark"
-                   Color="Color.Primary"
-                   Label="@(IsDark ? "暗色模式" : "亮色模式")" />
-    </MudItem>
+    @* 關於 / 版本 *@
+    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">關於</MudText>
+    <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">目前版本</MudText>
+                <MudSpacer />
+                <MudText Typo="Typo.body2">@AppVersion</MudText>
+            </MudStack>
+            <MudDivider />
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">最新版本</MudText>
+                <MudSpacer />
+                <MudText Typo="Typo.body2">@latestVersion</MudText>
+            </MudStack>
+            <MudDivider />
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                           OnClick="HandleCheckForUpdate" Disabled="@isCheckingForUpdate">
+                    @if (isCheckingForUpdate)
+                    {
+                        <MudProgressCircular Class="me-1" Indeterminate="true" Size="Size.Small" />
+                        <span>檢查中...</span>
+                    }
+                    else
+                    {
+                        <span>檢查更新</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
 
-    <MudItem xs="12" Class="d-flex align-center">
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Info"
-                   StartIcon="@Icons.Material.Filled.Feedback"
-                   OnClick="@(() => OpenExternalLink("mailto:a0985209465@gmail.com?subject=【組電腦小幫手 意見回饋】&body=請在此輸入您的意見：\n\n"))">
-            意見回饋
-        </MudButton>
-    </MudItem>
+    @* 其他 *@
+    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">其他</MudText>
+    <MudPaper Elevation="0" Outlined="true" Class="pa-3">
+        <MudStack Spacing="0">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.body2">意見回饋</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Outlined.Email" Color="Color.Default"
+                               OnClick="@(() => OpenExternalLink("mailto:a0985209465@gmail.com?subject=【組電腦小幫手 意見回饋】&body=請在此輸入您的意見：\n\n"))" />
+            </MudStack>
+            <MudDivider />
+            @* 清除資料 *@
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-1">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.body2">清除所有資料</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">刪除全部菜單與偏好設定，此操作無法復原</MudText>
+                </MudStack>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Outlined.DeleteForever" Color="Color.Error"
+                               OnClick="HandleClearAllData" />
+            </MudStack>
+        </MudStack>
+    </MudPaper>
 
-    <MudItem xs="12">
-        <MudDivider Class="my-2" />
-    </MudItem>
-
-    <MudItem xs="12" Class="d-flex align-center">
-        <MudText Class="me-3" Typo="Typo.body1" Color="Color.Secondary">
-            應用程式版本：@AppVersion
-        </MudText>
-    </MudItem>
-
-    <MudItem xs="12" Class="d-flex align-center">
-        <MudText Class="me-3" Typo="Typo.body1" Color="Color.Secondary">
-            最新版本：@latestVersion
-        </MudText>
-    </MudItem>
-
-    <MudItem xs="12" Class="d-flex align-center">
-        <MudButton Color="Color.Primary"
-                   Variant="Variant.Filled"
-                   OnClick="HandleCheckForUpdate"
-                   Disabled="@isCheckingForUpdate">
-            @if (isCheckingForUpdate)
-            {
-                <MudProgressCircular Class="me-2" Indeterminate="true" Size="Size.Small" />
-                <span>檢查中...</span>
-            }
-            else
-            {
-                <span>檢查更新</span>
-            }
-        </MudButton>
-    </MudItem>
-
-</MudGrid>
+</MudStack>
 
 @code {
-    private bool IsDark
-    {
-        get => ThemeService.IsDarkMode;
-        set => ThemeService.ToggleDarkMode(value);
-    }
-
     private string AppVersion { get; set; } = "N/A";
     private string latestVersion = "N/A";
     private bool isCheckingForUpdate = false;
@@ -78,6 +83,21 @@
         AppVersion = parts.Length > 3 ? string.Join(".", parts.Take(3)) : fullVersion;
         latestVersion = await UpdateService.GetLatestVersionAsync();
         await base.OnInitializedAsync();
+    }
+
+    private async Task HandleClearAllData()
+    {
+        var result = await DialogService.ShowMessageBoxAsync(
+            "確認清除所有資料",
+            "此操作將刪除全部菜單及偏好設定，且無法復原。確定要繼續嗎？",
+            yesText: "確定清除",
+            noText: "取消"
+        );
+
+        if (result != true) return;
+
+        await MenuService.ClearAllDataAsync();
+        Preferences.Clear();
     }
 
     private async Task HandleCheckForUpdate()

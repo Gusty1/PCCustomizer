@@ -2,7 +2,7 @@
 @inject IDataService DataService
 
 @* 載入遮罩：使用 Fixed 定位覆蓋整個視窗 *@
-<MudOverlay Visible="@DataService.IsLoading" DarkBackground="true" ZIndex="9999"
+<MudOverlay Visible="@DataService.IsGlobalLoading" DarkBackground="true" ZIndex="9999"
             Style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
     <MudStack AlignItems="AlignItems.Center" Spacing="3">
         <MudProgressCircular Color="Color.Secondary" Indeterminate="true" Size="Size.Large" />

@@ -42,6 +42,7 @@ namespace PCCustomizer.Services
                 string json = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(json);
                 string latestVersionStr = doc.RootElement.GetProperty("tag_name").GetString() ?? "0.0.0";
+                latestVersionStr = latestVersionStr.TrimStart('v');
 
                 return latestVersionStr;
             }

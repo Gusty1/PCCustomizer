@@ -22,6 +22,8 @@ namespace PCCustomizer.Models
 
         public required string ProductFullText { get; set; }
 
+        public string? ProductUrl { get; set; }
+
         public int ProductPrice { get; set; }
 
         public int Qty { get; set; }

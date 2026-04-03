@@ -1,21 +1,37 @@
-﻿@inherits BaseComponent
+@inherits BaseComponent
 
-<MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">首頁</MudNavLink>
-    <MudNavLink Href="/menu" Match="NavLinkMatch.All">菜單管理</MudNavLink>
-    <MudNavLink Href="/setting" Match="NavLinkMatch.All">設定</MudNavLink>
-    <MudNavGroup Title="相關連結" Expanded="false">
-        <MudNavLink OnClick="@(() => OpenExternalLink("https://www.mydrivers.com/zhuanti/tianti/cpu/index.html"))">
-           CPU性能天梯圖
+<MudNavMenu Class="pa-2" Style="height: 100%;">
+    <MudNavLink Href="/" Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Outlined.Home">
+        首頁
+    </MudNavLink>
+    <MudNavLink Href="/menu" Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Outlined.MenuBook">
+        菜單管理
+    </MudNavLink>
+    <MudNavLink Href="/setting" Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Outlined.Settings">
+        設定
+    </MudNavLink>
+
+    <MudDivider Class="my-2" />
+
+    <MudNavGroup Title="相關連結" Icon="@Icons.Material.Outlined.Link" Expanded="false">
+        <MudNavLink OnClick="@(() => OpenExternalLink("https://www.mydrivers.com/zhuanti/tianti/cpu/index.html"))"
+                    Icon="@Icons.Material.Outlined.Memory">
+            CPU 性能天梯圖
         </MudNavLink>
-        <MudNavLink OnClick="@(() => OpenExternalLink("https://www.mydrivers.com/zhuanti/tianti/gpu/index.html"))">
+        <MudNavLink OnClick="@(() => OpenExternalLink("https://www.mydrivers.com/zhuanti/tianti/gpu/index.html"))"
+                    Icon="@Icons.Material.Outlined.VideoSettings">
             顯卡性能天梯圖
         </MudNavLink>
-        <MudNavLink OnClick="@(() => OpenExternalLink("https://pcpartpicker.com/"))">
-            電腦組裝模擬器(WEB)
+        <MudNavLink OnClick="@(() => OpenExternalLink("https://pcpartpicker.com/"))"
+                    Icon="@Icons.Material.Outlined.Build">
+            電腦組裝模擬器 (Web)
         </MudNavLink>
-        <MudNavLink OnClick="@(() => OpenExternalLink("https://store.steampowered.com/app/621060/PC_Building_Simulator/"))">
-            電腦組裝模擬器(STEAM)
+        <MudNavLink OnClick="@(() => OpenExternalLink("https://store.steampowered.com/app/621060/PC_Building_Simulator/"))"
+                    Icon="@Icons.Material.Outlined.SportsEsports">
+            電腦組裝模擬器 (Steam)
         </MudNavLink>
     </MudNavGroup>
 </MudNavMenu>

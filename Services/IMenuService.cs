@@ -29,6 +29,12 @@ namespace PCCustomizer.Services
 
         Task UpdateMenuCategoryAsync(MyMenuCategoryDTO myMenuCategoryDTO,List<MenuProduct> menuProducts);
 
+        Task UpdateMenuProductQtyAsync(int menuProductId, int qty);
+
+        Task DeleteMenuProductAsync(int menuProductId);
+
         Task SendMenu(int id);
+
+        Task ClearAllDataAsync();
     }
 }

@@ -1,7 +1,7 @@
 # PCCustomizer 專案分析報告
 
 > 生成日期：2026-03-27
-> 最後更新：2026-03-28（已完成六輪修正，所有 LOW 技術債已處理完畢；第 10 節 UI 設計審查所有問題均已修復）
+> 最後更新：2026-04-04（修正 DataService 生命週期記錄；更新元件行數；更新 U-04 修復狀態）
 > 分析範圍：完整專案架構、程式碼品質、依賴管理、UI 設計、潛在問題
 
 ---
@@ -108,7 +108,7 @@ PCCustomizer/
 | `CategoryService` | Scoped | 正確（EF DbContext Scoped） |
 | `MenuService` | Scoped | 正確 |
 | `NotificationService` | Scoped | 可接受 |
-| `DataService` | Transient（HttpClient 工廠） | 正確 |
+| `DataService` | Singleton（HttpClient 工廠） | 正確（持有 IsGlobalLoading 等跨元件共享狀態） |
 | `UpdateCheckService` | Transient（HttpClient 工廠） | 正確 |
 
 ---
@@ -173,9 +173,9 @@ PCCustomizer/
 
 | 元件 | 行數 | 評估 |
 |------|------|------|
-| `Home.razor` | ~160 | 良好（Popover 已抽離至 `CurrentMenuPopover.razor`） |
+| `Home.razor` | ~305 | 良好（Popover 已抽離至 `CurrentMenuPopover.razor`） |
 | `CurrentMenuPopover.razor` | ~95 | 良好（新增獨立元件） |
-| `Menu.razor` | ~320 | 合理，但表格列渲染可考慮抽取元件 |
+| `Menu.razor` | ~364 | 合理，但表格列渲染可考慮抽取元件 |
 | `ProductContent.razor` | ~230 | 合理 |
 | `Setting.razor` | ~107 | 良好 |
 | `ComputerInfoDialog.razor` | ~99 | 良好 |
@@ -304,7 +304,7 @@ finally { _scanLock.Release(); }
 | U-01 | `MainLayout.razor` | 雙重 Overlay 衝突，Home.razor 的 Overlay 永遠不顯示；樣式水平排列不符 UX 慣例 | HIGH | **已修復** — 移除 Home.razor Overlay、統一為垂直置中樣式、移除隱藏 Body 的條件判斷 |
 | U-02 | `ProductContent.razor` | 第三欄表頭（數量欄）只有 Razor 注解，不顯示任何文字 | MEDIUM | **已修復** — 改為顯示「**數量**」標題 |
 | U-03 | `Menu.razor` | 菜單卡片表格價格欄未套用千分位格式，與其他位置顯示不一致 | MEDIUM | **已修復** — 兩處均改為 `.ToString("N0")` |
-| U-04 | `Menu.razor` | 卡片高度固定 600px，商品少時下方空白過多 | LOW | **已修復** — 改為 `min-height: 300px; max-height: 600px` |
+| U-04 | `Menu.razor` | 卡片高度固定 600px，商品少時下方空白過多 | LOW | **已修復** — 移除內層高度限制，改為頁面單一 scrollbar |
 | U-05 | `Setting.razor` | 冗餘 `md/sm` 響應式屬性；`MudText` 使用小寫 `class` 而非 Blazor 參數 `Class` | LOW | **已修復** — 移除多餘屬性；`class` 改為 `Class` |
 | U-06 | `Setting.razor` | 「深色模式/意見回饋」與「版本資訊」區段缺少視覺分隔 | LOW | **已修復** — 加入 `MudDivider` 分隔 |
 | U-07 | `Home.razor` | 「新增菜單」按鈕缺少 `Color`，顯示預設灰色，與整體風格不一致 | LOW | **已修復** — 補上 `Color="Color.Primary"` |

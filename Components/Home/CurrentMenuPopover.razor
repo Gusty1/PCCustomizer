@@ -1,4 +1,5 @@
 @using PCCustomizer.Models
+@inject IMenuService MenuService
 
 <div style="position: relative; display: inline-block;"
      @onmouseenter="() => IsOpenChanged.InvokeAsync(true)">
@@ -24,7 +25,8 @@
                                 <th style="min-width: 80px;">類別</th>
                                 <th>商品名稱</th>
                                 <th style="min-width: 70px; text-align: right;">價格</th>
-                                <th style="min-width: 50px; text-align: center;">數量</th>
+                                <th style="min-width: 110px; text-align: center;">數量</th>
+                                <th style="min-width: 40px;"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -37,17 +39,63 @@
                                     {
                                         <tr>
                                             <td rowspan="@value.Count">@key</td>
-                                            <td>@item.ProductName</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.ProductUrl))
+                                                {
+                                                    <MudLink Href="@item.ProductUrl" Target="_blank" Color="Color.Info" Typo="Typo.body2">
+                                                        @item.ProductName
+                                                    </MudLink>
+                                                }
+                                                else
+                                                {
+                                                    @item.ProductName
+                                                }
+                                            </td>
                                             <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
-                                            <td style="text-align: center;">@item.Qty</td>
+                                            <td style="text-align: center;">
+                                                <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                                 Style="width:80px;" Step="1" Min="1"
+                                                                 Value="@item.Qty"
+                                                                 ValueChanged="@((int newQty) => HandleQtyChanged(item, newQty))"
+                                                                 Disabled="@IsLoading" />
+                                            </td>
+                                            <td>
+                                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                               Color="Color.Error" Variant="Variant.Filled"
+                                                               OnClick="@(() => HandleDeleteProduct(item))"
+                                                               Disabled="@IsLoading" />
+                                            </td>
                                         </tr>
                                     }
                                     else
                                     {
                                         <tr>
-                                            <td>@item.ProductName</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.ProductUrl))
+                                                {
+                                                    <MudLink Href="@item.ProductUrl" Target="_blank" Color="Color.Info" Typo="Typo.body2">
+                                                        @item.ProductName
+                                                    </MudLink>
+                                                }
+                                                else
+                                                {
+                                                    @item.ProductName
+                                                }
+                                            </td>
                                             <td style="text-align: right;">@item.ProductPrice.ToString("N0")</td>
-                                            <td style="text-align: center;">@item.Qty</td>
+                                            <td style="text-align: center;">
+                                                <MudNumericField T="int" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                                 Style="width:80px;" Step="1" Min="1"
+                                                                 Value="@item.Qty"
+                                                                 ValueChanged="@((int newQty) => HandleQtyChanged(item, newQty))"
+                                                                 Disabled="@IsLoading" />
+                                            </td>
+                                            <td>
+                                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                               Color="Color.Error" Variant="Variant.Filled"
+                                                               OnClick="@(() => HandleDeleteProduct(item))"
+                                                               Disabled="@IsLoading" />
+                                            </td>
                                         </tr>
                                     }
                                 }
@@ -98,5 +146,17 @@
     private async Task ToggleOpen()
     {
         await IsOpenChanged.InvokeAsync(!IsOpen);
+    }
+
+    private async Task HandleQtyChanged(MenuProduct item, int newQty)
+    {
+        // 強制下限為 1
+        int safeQty = Math.Max(1, newQty);
+        await MenuService.UpdateMenuProductQtyAsync(item.Id, safeQty);
+    }
+
+    private async Task HandleDeleteProduct(MenuProduct item)
+    {
+        await MenuService.DeleteMenuProductAsync(item.Id);
     }
 }

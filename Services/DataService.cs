@@ -30,6 +30,25 @@ namespace PCCustomizer.Services
                 }
             }
         }
+
+        private bool _isGlobalLoading = true;
+        /// <summary>
+        /// 預設為 true：應用程式一啟動遮罩就顯示，直到首頁商品載入完成後才由外部設為 false。
+        /// </summary>
+        public bool IsGlobalLoading
+        {
+            get => _isGlobalLoading;
+            private set
+            {
+                if (SetProperty(ref _isGlobalLoading, value))
+                {
+                    OnStateChanged?.Invoke();
+                }
+            }
+        }
+
+        public void SetGlobalLoading(bool value) => IsGlobalLoading = value;
+
         public event Action? OnStateChanged;
 
         public async Task SeedDataIfNeededAsync()
@@ -39,6 +58,8 @@ namespace PCCustomizer.Services
             try
             {
                 IsLoading = true;
+                // 進入更新流程時，確保全域遮罩也顯示（手動觸發的情況）
+                IsGlobalLoading = true;
 
                 // 確保資料庫和資料表結構都存在
                 using var scope = serviceProvider.CreateScope();

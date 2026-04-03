@@ -1,8 +1,10 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @implements IDisposable
 @inject IThemeService ThemeService
 @inject IDataService DataService
 @inject IHardwareService HardwareService
+@inject IDialogService DialogService
+@inject IJSRuntime JSRuntime
 
 @* 根據 ThemeService 的狀態，應用全域主題 *@
 <MudThemeProvider Theme="@ThemeService.CurrentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
@@ -10,16 +12,37 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout Class="d-flex flex-column">
-    <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        組電腦小幫手
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="true">
+        <MudText Typo="Typo.h6" Class="ml-2" Style="font-weight: 600; letter-spacing: 0.5px;">
+            組電腦小幫手
+        </MudText>
+        <MudSpacer />
+        @* 商品價格警示連結 *@
+        <MudTooltip Text="價格僅供參考，以原價屋官網為準">
+            <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Inherit"
+                           OnClick="@(() => OpenExternalLink("https://www.coolpc.com.tw/evaluate.php"))" />
+        </MudTooltip>
+        @* 我的電腦資訊 *@
+        <MudTooltip Text="我的電腦資訊">
+            <MudIconButton Icon="@Icons.Material.Outlined.Computer" Color="Color.Inherit"
+                           OnClick="OpenComputerInfoDialogAsync" />
+        </MudTooltip>
+        @* 深色/淺色模式 *@
+        <MudTooltip Text="@(ThemeService.IsDarkMode ? "切換淺色模式" : "切換深色模式")">
+            <MudIconButton Icon="@(ThemeService.IsDarkMode ? Icons.Material.Outlined.LightMode : Icons.Material.Outlined.DarkMode)"
+                           Color="Color.Inherit" OnClick="@(() => ThemeService.ToggleDarkMode(!ThemeService.IsDarkMode))" />
+        </MudTooltip>
     </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
+
+    @* 固定展開的側邊導覽列（Persistent + Open=true 實現固定不收合） *@
+    <MudDrawer Open="true" Variant="DrawerVariant.Persistent" Elevation="0"
+               ClipMode="DrawerClipMode.Always">
         <MyNavMenu />
     </MudDrawer>
-    <MudMainContent Class="d-flex flex-column flex-grow-1">
-        <MudContainer MaxWidth="MaxWidth.False" Class="flex-grow-1 d-flex flex-column" Style="min-height: 0;">
+
+    <MudMainContent Class="d-flex flex-column" Style="height: 100%; overflow: hidden;">
+        <MudContainer MaxWidth="MaxWidth.False" Class="flex-grow-1 d-flex flex-column pa-4" Style="min-height: 0; height: 100%; overflow: hidden;">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -29,31 +52,28 @@
 <LoadingOverlay />
 
 @code {
-    bool _drawerOpen = false; // 側邊欄開關狀態
-
-    void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
-
-    // 元件初始化時執行
     protected override async Task OnInitializedAsync()
     {
         await ThemeService.LoadThemeAsync();
-        // 訂閱主題變更事件，當主題變更時，刷新此元件的 UI
         ThemeService.OnChange += StateHasChanged;
-        // 獲取商品資料
         _ = DataService.SeedDataIfNeededAsync();
-        // 獲取電腦資訊
         _ = HardwareService.ScanComputerInfoAsync();
-
         await base.OnInitializedAsync();
     }
 
-    // 元件銷毀時執行
     public void Dispose()
     {
-        // 取消訂閱，防止記憶體洩漏
         ThemeService.OnChange -= StateHasChanged;
+    }
+
+    private Task OpenComputerInfoDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        return DialogService.ShowAsync<ComputerInfoDialog>("我的電腦資訊", options);
+    }
+
+    private Task OpenExternalLink(string url)
+    {
+        return JSRuntime.InvokeVoidAsync("open", url, "_blank").AsTask();
     }
 }
