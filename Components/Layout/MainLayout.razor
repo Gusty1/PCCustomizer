@@ -14,7 +14,7 @@
 
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true">
-        <MudText Typo="Typo.h6" Class="ml-2" Style="font-weight: 600; letter-spacing: 0.5px;">
+        <MudText Typo="Typo.h6" Style="font-weight: 600; letter-spacing: 0.5px;">
             組電腦小幫手
         </MudText>
         <MudSpacer />
@@ -35,9 +35,8 @@
         </MudTooltip>
     </MudAppBar>
 
-    @* 固定展開的側邊導覽列（Persistent + Open=true 實現固定不收合） *@
-    <MudDrawer Open="true" Variant="DrawerVariant.Persistent" Elevation="0"
-               ClipMode="DrawerClipMode.Always">
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Mini" Elevation="1"
+               ClipMode="DrawerClipMode.Always" OpenMiniOnHover="true">
         <MyNavMenu />
     </MudDrawer>
 
@@ -52,6 +51,8 @@
 <LoadingOverlay />
 
 @code {
+    private bool _drawerOpen = false;
+
     protected override async Task OnInitializedAsync()
     {
         await ThemeService.LoadThemeAsync();

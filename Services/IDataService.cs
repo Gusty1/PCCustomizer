@@ -18,9 +18,14 @@ public interface IDataService : INotifyPropertyChanged
     event Action OnStateChanged;
 
     /// <summary>
-    /// 設定全域載入遮罩的顯示狀態。
+    /// 全域載入遮罩顯示的訊息文字。
     /// </summary>
-    void SetGlobalLoading(bool value);
+    string LoadingMessage { get; }
+
+    /// <summary>
+    /// 設定全域載入遮罩的顯示狀態與訊息文字。
+    /// </summary>
+    void SetGlobalLoading(bool value, string message = "更新原價屋資訊中...");
 
     /// <summary>
     /// 取得商品資料，並寫入資料庫

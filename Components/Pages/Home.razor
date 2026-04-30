@@ -14,7 +14,8 @@
     @* 頂部工具列：分類選單 + 菜單操作 *@
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3" Style="flex-shrink: 0;">
         @* 主分類選單 *@
-        <MudSelect T="MyCategoryDTO?" @bind-Value="SelectedCategory" Label="主分類" Placeholder="選擇主分類"
+        <MudSelect T="MyCategoryDTO?" Value="selectedCategory" ValueChanged="OnSelectedCategoryChanged"
+                   Label="主分類" Placeholder="選擇主分類"
                    AdornmentColor="Color.Primary" FitContent="false" Clearable="true"
                    Disabled="@DataService.IsLoading" MaxHeight="700"
                    Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width: 280px; max-width: 360px;">
@@ -33,7 +34,7 @@
         @if (selectedCategory is not null)
         {
             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                @SelectedCategory.Summary
+                @selectedCategory.Summary
             </MudText>
         }
 
@@ -97,26 +98,34 @@
 
     // 這是真正儲存值的私有欄位 (小寫開頭)
     private MyCategoryDTO? selectedCategory;
-    // 這是用來綁定 UI 的公有屬性 (大寫開頭)
-    private MyCategoryDTO? SelectedCategory
+    // 同步更新 selectedCategory 與 subcategories，供初始化和 DataService 完成後共用
+    private void SetSelectedCategory(MyCategoryDTO? value)
     {
-        get => selectedCategory;
-        set
-        {
-            selectedCategory = value;
+        selectedCategory = value;
 
-            if (selectedCategory is null)
-            {
-                subcategories = new List<MySubcategoryDTO>();
-            }
-            else
-            {
-                Preferences.Set("LastCategoryId", selectedCategory.CategoryId);
-                //選擇主目錄時切換對應的子目錄
-                subcategories = (categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>())
-                    .OrderBy(s => s.CategoryId).ToList();
-            }
+        if (selectedCategory is null)
+        {
+            subcategories = new List<MySubcategoryDTO>();
         }
+        else
+        {
+            Preferences.Set("LastCategoryId", selectedCategory.CategoryId);
+            subcategories = (categories?.FirstOrDefault(c => c.CategoryId == selectedCategory.CategoryId)?.Subcategories ?? new List<MySubcategoryDTO>())
+                .OrderBy(s => s.CategoryId).ToList();
+        }
+    }
+
+    // 使用者切換主分類時：顯示遮罩 → 讓 Blazor 渲染空狀態 → 更新資料 → 關遮罩
+    private async Task OnSelectedCategoryChanged(MyCategoryDTO? value)
+    {
+        // 清空子分類並顯示遮罩，讓 MudTabs 先消失
+        selectedCategory = value;
+        subcategories = new List<MySubcategoryDTO>();
+        DataService.SetGlobalLoading(true, "商品資訊載入中...");
+        await Task.Yield();
+
+        SetSelectedCategory(value);
+        DataService.SetGlobalLoading(false);
     }
     private bool _popoverOpen = false;
 
@@ -159,9 +168,8 @@
         if (categories.Any())
         {
             var lastCategoryId = Preferences.Get("LastCategoryId", -1);
-            // SelectedCategory setter 會同步更新 subcategories
-            SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
-                               ?? categories.First();
+            SetSelectedCategory(categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                               ?? categories.First());
         }
     }
 
@@ -198,7 +206,7 @@
         try
         {
             // 先清空選擇，讓 MudTabs 消失，避免後續中間渲染導致 panel 累積
-            SelectedCategory = null;
+            SetSelectedCategory(null);
             await DataService.SeedDataIfNeededAsync();
             // 更新完成後重新載入資料並還原分類選擇
             categories = await CategoryService.GetCategoriesWithDetailsAsync(currentMenuCategory);
@@ -206,8 +214,8 @@
             if (categories.Any())
             {
                 var lastCategoryId = Preferences.Get("LastCategoryId", -1);
-                SelectedCategory = categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
-                                   ?? categories.First();
+                SetSelectedCategory(categories.FirstOrDefault(c => c.CategoryId == lastCategoryId)
+                                   ?? categories.First());
             }
         }
         finally

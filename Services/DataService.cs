@@ -47,7 +47,14 @@ namespace PCCustomizer.Services
             }
         }
 
-        public void SetGlobalLoading(bool value) => IsGlobalLoading = value;
+        private string _loadingMessage = "更新原價屋資訊中...";
+        public string LoadingMessage => _loadingMessage;
+
+        public void SetGlobalLoading(bool value, string message = "更新原價屋資訊中...")
+        {
+            _loadingMessage = message;
+            IsGlobalLoading = value;
+        }
 
         public event Action? OnStateChanged;
 
