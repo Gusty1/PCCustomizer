@@ -75,15 +75,15 @@ h1:focus {
     display: none;
 }
 
-/* 高度鏈: MudMainContent 不可超過剩餘空間，允許頁面捲動 */
+/* 高度鏈: MudMainContent 不可超過剩餘空間 */
 .mud-main-content {
     min-height: 0 !important;
-    overflow: auto;
+    overflow: hidden;
 }
 
-/* Tab 左側列表固定 25% 寬度 */
+/* Tab 左側列表固定 20% 寬度 */
 .mud-tabs.mud-tabs-vertical .mud-tabs-tabbar {
-    width: 25% !important;
+    width: 20% !important;
     flex-shrink: 0 !important;
     overflow-y: auto;
 }
@@ -116,16 +116,36 @@ h1:focus {
     width: 100% !important;
 }
 
-/* Tab 右側面板填滿寬度並可捲動 */
+/* Tab 右側面板填滿寬度，不可自行捲動（由內部 MudTable 管理捲動） */
 .mud-tabs.mud-tabs-vertical .mud-tabs-panels {
     flex: 1 1 auto !important;
     min-width: 0 !important;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
-/* Tab panel 內容填滿寬度 */
+/* Tab panel 填滿寬度與高度，flex column 讓 MudTable 正確計算高度 */
 .mud-tabs.mud-tabs-vertical .mud-tab-panel {
     width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* MudTable 在 tab panel 內填滿剩餘空間，啟用內部捲動 */
+.mud-tabs.mud-tabs-vertical .mud-tab-panel .mud-table {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* MudTable 的捲動容器填滿剩餘空間 */
+.mud-tabs.mud-tabs-vertical .mud-tab-panel .mud-table .mud-table-container {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 /* 菜單卡片標頭: 按鈕與標題垂直置中 + 淺底色 */

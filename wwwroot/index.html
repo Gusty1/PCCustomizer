@@ -26,9 +26,10 @@
 
     <script>
         function scrollToTop() {
-            var panelsEl = document.querySelector('.mud-tabs-vertical .mud-tabs-panels');
-            if (panelsEl) {
-                panelsEl.scrollTo({ top: 0, behavior: 'smooth' });
+            // 捲動容器改為 MudTable 內部的 .mud-table-container
+            var tableContainer = document.querySelector('.mud-tabs-vertical .mud-tab-panel:not([hidden]) .mud-table-container');
+            if (tableContainer) {
+                tableContainer.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }

@@ -9,14 +9,13 @@
     @if (Subcategories is not null && Subcategories.Any())
     {
         <MudTabs Elevation="4" Rounded="true" ApplyEffectsToContainer="true" Outlined="true"
-                 Position="Position.Start" Border="true" PanelClass="d-flex flex-column pa-3" Centered="false"
-                 ActiveTabClass=""
+                 Position="Position.Start" Border="true" PanelClass="d-flex flex-column pa-3 overflow-hidden" Centered="false"
                  ActivePanelIndexChanged="OnTabChanged" Style="width: 100%; flex: 1 1 0; overflow: hidden;">
             @foreach (var subcategory in Subcategories)
             {
                 <MudTabPanel Class="flex-grow-1">
                     <TabContent>
-                        <MudItem Class="d-flex flex-grow-1 align-center">
+                        <MudItem Class="d-flex flex-grow-1 align-center" Style="width: 100%;">
                             <MudText Align="Align.Left" Typo="Typo.subtitle1" Style="width:100%; white-space: normal; word-break: break-word;">
                                 @subcategory.SubcategoryName
                             </MudText>
@@ -31,6 +30,7 @@
                         <MudTable T="MyProductDTO" Items="@subcategory.Products" Hover="true" Bordered="true" Striped="false"
                                   Filter="new Func<MyProductDTO, bool>(FilterFunc)" RowsPerPage="50" Class="flex-grow-1"
                                   RowStyleFunc="@((item, _) => item.Qty > 0 ? "background-color: rgba(76, 175, 80, 0.12);" : "")"
+                                  FixedHeader="true" Height="100%"
                                   >
                             <ToolBarContent>
                                 <MudText Typo="Typo.h6">@subcategory.SubcategoryName</MudText>
