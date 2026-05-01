@@ -1,6 +1,6 @@
 # AGENTS.md — PCCustomizer 專案 Agent 執行指南
 
-> 更新日期：2026-04-28
+> 更新日期：2026-05-01
 > 適用對象：所有在此專案中操作的 AI Agent（Claude Code 等）
 
 ---
@@ -113,14 +113,28 @@ C:\Users\{使用者名稱}\AppData\Local\Packages\com.companyname.pccustomizer_c
 ```
 啟動 → MainLayout.OnInitializedAsync → DataService.SeedDataIfNeededAsync()
          ↓
-     SeedDataIfNeededAsync 開始 → IsGlobalLoading = true（遮罩顯示）
+     SeedDataIfNeededAsync 開始 → IsLoading = true；IsGlobalLoading = true（遮罩顯示）
          ↓
-     Home.razor 完成 DB 讀取 → DataService.SetGlobalLoading(false)（遮罩關閉）
+     SeedDataIfNeededAsync 結束 → IsLoading = false（IsGlobalLoading 仍為 true）
+         ↓
+     Home.razor HandleDataStateChanged 觸發 → 完成 DB 讀取 → SetGlobalLoading(false)（遮罩關閉）
 ```
 
 - `DataService.IsGlobalLoading`（預設 `true`）：控制 `LoadingOverlay` 元件的顯示
-- `DataService.IsLoading`：用於 UI 按鈕 disabled（避免重複觸發 SeedData）
-- `LoadingOverlay` 是獨立元件，直接訂閱 `DataService`，**不會觸發整個 Layout 重新渲染**
+- `DataService.IsLoading`：僅用於 UI 按鈕 disabled（避免重複觸發 SeedData）
+- `DataService.LoadingMessage`：遮罩上顯示的文字，透過 `SetGlobalLoading` 一起設定
+- `DataService.SetGlobalLoading(bool value, string message)`：**唯一正確的遮罩開關方式**，同時設定狀態與訊息文字
+- `LoadingOverlay` 是獨立元件，直接訂閱 `DataService.OnStateChanged`，**不會觸發整個 Layout 重新渲染**
+
+### 觸發遮罩的場景
+
+| 場景 | 開啟遮罩 | 訊息 | 關閉遮罩 |
+|------|---------|------|---------|
+| 啟動 / 手動更新資料 | `SeedDataIfNeededAsync` 內部（直接設 `IsGlobalLoading = true`） | 預設「更新原價屋資訊中...」 | `Home.razor` 的 `UpdateData()` 或 `HandleDataStateChanged()` 呼叫 `SetGlobalLoading(false)` |
+| 切換主分類 | `Home.razor` 的 `OnSelectedCategoryChanged` 呼叫 `SetGlobalLoading(true, "商品資訊載入中...")` | "商品資訊載入中..." | 同一方法最後呼叫 `SetGlobalLoading(false)` |
+
+> **注意**：`SeedDataIfNeededAsync` 的 `finally` 只關閉 `IsLoading`，**不關閉 `IsGlobalLoading`**。
+> 關閉全域遮罩的責任在 `Home.razor`，不是 `DataService`。
 
 ---
 
@@ -131,6 +145,7 @@ C:\Users\{使用者名稱}\AppData\Local\Packages\com.companyname.pccustomizer_c
 3. 使用 `MudBlazor` 元件時，注意參數大小寫：`Class` 而非 `class`、`Style` 而非 `style`
 4. `MudSelect` 需要非同步操作時，使用 `Value` + `ValueChanged`，不可用 `@bind-Value`
 5. `DrawerVariant.Permanent` 在 MudBlazor 9 **不存在**，請使用 `DrawerVariant.Persistent`
+6. **側邊導覽 Drawer 採用 Mini Variant**：`DrawerVariant.Mini` + `OpenMiniOnHover="true"`，`_drawerOpen` 預設為 `false`（啟動時收合，滑鼠移入自動展開，移出自動收合），**禁止改回 Persistent 或 Temporary**
 
 ---
 
@@ -153,6 +168,8 @@ C:\Users\{使用者名稱}\AppData\Local\Packages\com.companyname.pccustomizer_c
 - **禁止在 `BaseComponent` 子類別中重複注入 `INotificationService`**（基底類別已注入）
 - **禁止在 `MainLayout` 中繼承 `BaseComponent`**（`LayoutComponentBase` 不相容）
 - **NavMenu.razor 已移除**，側邊導覽請使用 `MyNavMenu.razor`
+- **禁止直接設定 `IsGlobalLoading`**（屬性為 `private set`），一律改用 `DataService.SetGlobalLoading(bool, string)` 控制遮罩
+- **禁止在 `DataService.SeedDataIfNeededAsync` 的 `finally` 中關閉全域遮罩**，關閉遮罩的責任在 `Home.razor`
 
 ---
 
