@@ -16,7 +16,7 @@
         @* 主分類選單 *@
         <MudSelect T="MyCategoryDTO?" Value="selectedCategory" ValueChanged="OnSelectedCategoryChanged"
                    Label="主分類" Placeholder="選擇主分類"
-                   AdornmentColor="Color.Primary" FitContent="false" Clearable="true"
+                   AdornmentColor="Color.Primary" FitContent="false" Clearable="false"
                    Disabled="@DataService.IsLoading" MaxHeight="700"
                    Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width: 280px; max-width: 360px;">
             @if (categories is not null && categories.Any())
