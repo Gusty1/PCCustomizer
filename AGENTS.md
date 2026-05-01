@@ -111,20 +111,31 @@ C:\Users\{username}\AppData\Local\Packages\com.companyname.pccustomizer_cgsmvjbq
 ## 5. Global Loading Overlay
 
 ```
-App start → MainLayout.OnInitializedAsync → DataService.SeedDataIfNeededAsync()
+App start → MainLayout.OnInitializedAsync → DataService.SeedDataIfNeededAsync() (fire-and-forget)
                ↓
            SeedDataIfNeededAsync starts → IsLoading = true; IsGlobalLoading = true (overlay shown)
                ↓
-           SeedDataIfNeededAsync ends → IsLoading = false (IsGlobalLoading still true)
+           SeedDataIfNeededAsync ends (finally) → IsInitialized = true; IsLoading = false
                ↓
-           Home.razor HandleDataStateChanged fires → DB read complete → SetGlobalLoading(false) (overlay hidden)
+           OnStateChanged fires → Home.razor HandleDataStateChanged
+               ↓
+           IsInitialized == true && !IsLoading → LoadCategoriesAndRestoreSelectionAsync()
+               ↓
+           SetGlobalLoading(false) (overlay hidden)
 ```
 
 - `DataService.IsGlobalLoading` (default `true`): controls `LoadingOverlay` component visibility
 - `DataService.IsLoading`: used only to disable UI buttons (prevents duplicate SeedData triggers)
+- `DataService.IsInitialized`: set to `true` in `SeedDataIfNeededAsync` `finally` block (success or failure); **never reset**. Used by `Home.OnInitializedAsync` to avoid reading from an empty DB due to race condition with fire-and-forget startup.
 - `DataService.LoadingMessage`: text displayed on the overlay; set together via `SetGlobalLoading`
 - `DataService.SetGlobalLoading(bool value, string message)`: **the only correct way to control the overlay**
 - `LoadingOverlay` is a standalone component that subscribes directly to `DataService.OnStateChanged` — it does **not** trigger a full Layout re-render
+
+### Race Condition Guard (IsInitialized)
+
+`MainLayout` calls `SeedDataIfNeededAsync()` as fire-and-forget. `Home.OnInitializedAsync` may run before `IsLoading` is set to `true`, causing it to read from an empty DB and render a blank page.
+
+**Fix**: `Home.OnInitializedAsync` only self-loads if `IsInitialized == true && !IsLoading`. Otherwise it waits for `HandleDataStateChanged` to fire after SeedData completes.
 
 ### Overlay Trigger Scenarios
 
@@ -133,7 +144,7 @@ App start → MainLayout.OnInitializedAsync → DataService.SeedDataIfNeededAsyn
 | App startup / manual data refresh | Inside `SeedDataIfNeededAsync` (sets `IsGlobalLoading = true` directly) | Default: "更新原價屋資訊中..." | `Home.razor` `UpdateData()` or `HandleDataStateChanged()` calls `SetGlobalLoading(false)` |
 | Switch main category | `Home.razor` `OnSelectedCategoryChanged` calls `SetGlobalLoading(true, "商品資訊載入中...")` | "商品資訊載入中..." | Same method calls `SetGlobalLoading(false)` at the end |
 
-> **Note**: The `finally` block in `SeedDataIfNeededAsync` only closes `IsLoading`, **not `IsGlobalLoading`**.
+> **Note**: The `finally` block in `SeedDataIfNeededAsync` sets `IsInitialized = true` and closes `IsLoading`, **not `IsGlobalLoading`**.
 > Responsibility for closing the global overlay belongs to `Home.razor`, not `DataService`.
 
 ---

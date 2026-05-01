@@ -148,9 +148,10 @@
             Preferences.Set("LastMenuId", currentMenuCategory?.Id ?? -1);
         }
 
-        // 若 DataService 此時已完成，直接載入商品並關閉遮罩
-        // 若仍在載入中，HandleDataStateChanged 會在完成時觸發載入並關閉遮罩
-        if (!DataService.IsLoading)
+        // 只有 SeedDataIfNeededAsync 已完成（IsInitialized == true）且目前不在載入中，
+        // 才直接從 DB 讀取資料並關閉遮罩。
+        // 否則等 HandleDataStateChanged 在 SeedData 完成後觸發。
+        if (DataService.IsInitialized && !DataService.IsLoading)
         {
             await LoadCategoriesAndRestoreSelectionAsync();
             DataService.SetGlobalLoading(false);

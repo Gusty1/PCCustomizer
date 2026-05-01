@@ -17,6 +17,12 @@ namespace PCCustomizer.Services
     {
         private const string ProductDataUrl = "https://gusty1.github.io/Database/coolPC/product.json";
 
+        private bool _isInitialized = false;
+        /// <summary>
+        /// SeedDataIfNeededAsync 完成（成功或失敗）後設為 true，之後不再重置。
+        /// </summary>
+        public bool IsInitialized => _isInitialized;
+
         private bool _isLoading = false;
         public bool IsLoading
         {
@@ -160,6 +166,7 @@ namespace PCCustomizer.Services
             }
             finally
             {
+                _isInitialized = true;
                 IsLoading = false;
             }
         }

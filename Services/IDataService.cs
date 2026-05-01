@@ -8,6 +8,12 @@ public interface IDataService : INotifyPropertyChanged
     bool IsLoading { get; }
 
     /// <summary>
+    /// 表示 SeedDataIfNeededAsync 是否已完成至少一次（無論成功或失敗）。
+    /// 用於 Home.razor 判斷是否可以直接從 DB 讀取資料。
+    /// </summary>
+    bool IsInitialized { get; }
+
+    /// <summary>
     /// 表示是否需要顯示全域載入遮罩（涵蓋 SeedData + 首頁 DB 讀取兩個階段）。
     /// </summary>
     bool IsGlobalLoading { get; }
