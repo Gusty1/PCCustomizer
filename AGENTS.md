@@ -1,196 +1,196 @@
-# AGENTS.md — PCCustomizer 專案 Agent 執行指南
+# AGENTS.md — PCCustomizer Project Agent Guide
 
-> 更新日期：2026-05-01
-> 適用對象：所有在此專案中操作的 AI Agent（Claude Code 等）
-
----
-
-## 1. 專案概覽
-
-**PCCustomizer** 是一款 PC 零件比價輔助工具：從原價屋擷取商品資料，讓使用者自訂報價菜單，一鍵產生估價單。
-
-| 項目 | 內容 |
-|------|------|
-| 框架 | .NET MAUI 10 + Blazor Hybrid |
-| UI 套件 | MudBlazor 9 |
-| 資料庫 | SQLite + EF Core 10（`EnsureCreatedAsync`，非 Migration） |
-| 主要語言 | C# + Razor |
-| 目標平台 | Windows（主要）、Android、iOS、macOS Catalyst |
+> Last updated: 2026-05-01
+> Audience: All AI agents operating in this project (Claude Code, etc.)
 
 ---
 
-## 2. 目錄結構
+## 1. Project Overview
+
+**PCCustomizer** is a PC parts price-comparison assistant. It scrapes product data from CoolPC (原價屋), lets users build custom quote menus, and generates price estimates in one click.
+
+| Item | Details |
+|------|---------|
+| Framework | .NET MAUI 10 + Blazor Hybrid |
+| UI Library | MudBlazor 9 |
+| Database | SQLite + EF Core 10 (`EnsureCreatedAsync`, no migrations) |
+| Language | C# + Razor |
+| Target Platforms | Windows (primary), Android, iOS, macOS Catalyst |
+
+---
+
+## 2. Directory Structure
 
 ```
 PCCustomizer/
-├── MauiProgram.cs              # DI 容器設定（所有服務在這裡註冊）
-├── App.xaml / App.xaml.cs      # MAUI App 入口
-├── MainPage.xaml               # BlazorWebView 宿主
+├── MauiProgram.cs              # DI container setup (all services registered here)
+├── App.xaml / App.xaml.cs      # MAUI App entry point
+├── MainPage.xaml               # BlazorWebView host
 │
 ├── Components/
-│   ├── BaseComponent.cs        # 所有 Razor 元件的基底（含 NotificationService 注入）
-│   ├── _Imports.razor          # 全域 @using
-│   ├── Routes.razor            # 路由定義
-│   ├── General/                # 通用小元件
+│   ├── BaseComponent.cs        # Base class for all Razor components (injects NotificationService)
+│   ├── _Imports.razor          # Global @using directives
+│   ├── Routes.razor            # Route definitions
+│   ├── General/                # Shared small components
 │   │   ├── ComputerInfoDialog.razor
 │   │   └── PriceAlertText.razor
-│   ├── Home/                   # 首頁專屬元件
-│   │   ├── ProductContent.razor    # 商品列表（MudTabs）
-│   │   └── CurrentMenuPopover.razor # 當前菜單 Popover
-│   ├── Layout/                 # 版面配置
-│   │   ├── MainLayout.razor    # 主版面（AppBar + 固定側邊欄）
-│   │   ├── MyNavMenu.razor     # 側邊導覽（MudNavMenu）
-│   │   └── LoadingOverlay.razor # 全域載入遮罩
+│   ├── Home/                   # Home page-specific components
+│   │   ├── ProductContent.razor    # Product list (MudTabs)
+│   │   └── CurrentMenuPopover.razor # Active menu popover
+│   ├── Layout/                 # Layout components
+│   │   ├── MainLayout.razor    # Root layout (AppBar + fixed sidebar)
+│   │   ├── MyNavMenu.razor     # Sidebar navigation (MudNavMenu)
+│   │   └── LoadingOverlay.razor # Global loading mask
 │   └── Pages/
-│       ├── Home.razor          # 首頁（商品瀏覽 + 菜單操作）
-│       ├── Menu.razor          # 菜單管理頁
-│       └── Setting.razor       # 設定頁
+│       ├── Home.razor          # Home page (product browsing + menu operations)
+│       ├── Menu.razor          # Menu management page
+│       └── Setting.razor       # Settings page
 │
 ├── Services/
-│   ├── IDataService.cs / DataService.cs          # 資料同步（Singleton）
-│   ├── IMenuService.cs / MenuService.cs          # 菜單 CRUD（Scoped）
-│   ├── ICategoryService.cs / CategoryService.cs  # 商品分類查詢（Scoped）
-│   ├── ICoolPcService.cs / CoolPcService.cs      # 原價屋 HTTP（Transient via HttpClientFactory）
-│   ├── IHardwareService.cs / HardwareService.cs  # 硬體掃描（Singleton）
-│   ├── IThemeService.cs / ThemeService.cs        # 主題切換（Singleton）
-│   ├── INotificationService.cs / NotificationService.cs # Snackbar 通知（Scoped）
-│   └── IUpdateCheckService.cs / UpdateCheckService.cs   # GitHub 版本檢查（Transient）
+│   ├── IDataService.cs / DataService.cs          # Data sync (Singleton)
+│   ├── IMenuService.cs / MenuService.cs          # Menu CRUD (Scoped)
+│   ├── ICategoryService.cs / CategoryService.cs  # Product category queries (Scoped)
+│   ├── ICoolPcService.cs / CoolPcService.cs      # CoolPC HTTP client (Transient via HttpClientFactory)
+│   ├── IHardwareService.cs / HardwareService.cs  # Hardware scanning (Singleton)
+│   ├── IThemeService.cs / ThemeService.cs        # Theme switching (Singleton)
+│   ├── INotificationService.cs / NotificationService.cs # Snackbar notifications (Scoped)
+│   └── IUpdateCheckService.cs / UpdateCheckService.cs   # GitHub version check (Transient)
 │
 ├── Models/
-│   ├── Category.cs / Subcategory.cs / Product.cs  # 商品資料（從網路 JSON 載入）
-│   ├── MenuCategory.cs / MenuProduct.cs           # 使用者菜單資料
-│   ├── DTOs/                                       # 資料傳輸物件
-│   └── Hardware/                                   # 硬體資訊模型
+│   ├── Category.cs / Subcategory.cs / Product.cs  # Product data (loaded from network JSON)
+│   ├── MenuCategory.cs / MenuProduct.cs           # User menu data
+│   ├── DTOs/                                       # Data Transfer Objects
+│   └── Hardware/                                   # Hardware info models
 │
 └── Data/
-    └── AppDbContext.cs          # EF Core DbContext（含 Fluent API）
+    └── AppDbContext.cs          # EF Core DbContext (with Fluent API configuration)
 ```
 
 ---
 
-## 3. 服務生命週期（重要）
+## 3. Service Lifetimes (Critical)
 
-| 服務 | 生命週期 | 說明 |
-|------|---------|------|
-| `DataService` | **Singleton** | 持有 `IsGlobalLoading`、`IsLoading` 跨元件狀態 |
-| `ThemeService` | **Singleton** | 全域主題狀態 |
-| `HardwareService` | **Singleton** | 硬體掃描結果快取 |
-| `MenuService` | **Scoped** | 依賴 EF Core DbContext（Scoped） |
-| `CategoryService` | **Scoped** | 依賴 EF Core DbContext（Scoped） |
-| `NotificationService` | **Scoped** | 依賴 MudBlazor ISnackbar（Scoped） |
-| `CoolPcService` | **Transient** | 透過 IHttpClientFactory 管理 |
-| `UpdateCheckService` | **Transient** | 透過 IHttpClientFactory 管理 |
+| Service | Lifetime | Notes |
+|---------|---------|-------|
+| `DataService` | **Singleton** | Owns `IsGlobalLoading`, `IsLoading` state shared across components |
+| `ThemeService` | **Singleton** | Global theme state |
+| `HardwareService` | **Singleton** | Caches hardware scan results |
+| `MenuService` | **Scoped** | Depends on EF Core DbContext (Scoped) |
+| `CategoryService` | **Scoped** | Depends on EF Core DbContext (Scoped) |
+| `NotificationService` | **Scoped** | Depends on MudBlazor ISnackbar (Scoped) |
+| `CoolPcService` | **Transient** | Managed via IHttpClientFactory |
+| `UpdateCheckService` | **Transient** | Managed via IHttpClientFactory |
 
-> **注意**：`DataService` 是 Singleton，但需要使用 Scoped 服務時（如 `INotificationService`、`AppDbContext`），必須透過 `serviceProvider.CreateScope()` 手動建立作用域，禁止直接持有 Scoped 服務的參考。
-
----
-
-## 4. 資料庫關鍵規則
-
-### Schema 變更協議
-
-**每次修改 Model（新增/刪除/更名欄位）後，必須提醒使用者：**
-
-> 「此次修改變更了資料庫 schema，請刪除本機的 PCCustomizer.db3 後重新啟動 app，
-> 否則查詢會靜默失敗（EF Core 用 EnsureCreatedAsync，不支援 ALTER TABLE）。」
-
-DB 檔案路徑（Windows）：
-```
-C:\Users\{使用者名稱}\AppData\Local\Packages\com.companyname.pccustomizer_cgsmvjbq0fw2p\LocalState\PCCustomizer.db3
-```
-
-### Entity 關係
-
-- `Category` 1 → N `Subcategory`（Cascade Delete）
-- `Subcategory` 1 → N `Product`（透過 `SubcategoryName` 字串關聯）
-- `MenuCategory` 1 → N `MenuProduct`（Cascade Delete）
-- `MenuProduct` 包含快照資料（`CategoryName`、`ProductName` 等字串），不是外鍵引用商品
+> **Rule**: `DataService` is a Singleton. When it needs Scoped services (e.g. `INotificationService`, `AppDbContext`), always use `serviceProvider.CreateScope()` to create a manual scope. Never hold a direct reference to a Scoped service inside a Singleton.
 
 ---
 
-## 5. 全域載入遮罩機制
+## 4. Database Rules
 
+### Schema Change Protocol
+
+**After any Model change (add/remove/rename a field), you MUST warn the user:**
+
+> "This change modifies the database schema. Please delete the local PCCustomizer.db3 file and restart the app.
+> Silent query failures will occur otherwise — EF Core uses `EnsureCreatedAsync`, which does not support `ALTER TABLE`."
+
+DB file path (Windows):
 ```
-啟動 → MainLayout.OnInitializedAsync → DataService.SeedDataIfNeededAsync()
-         ↓
-     SeedDataIfNeededAsync 開始 → IsLoading = true；IsGlobalLoading = true（遮罩顯示）
-         ↓
-     SeedDataIfNeededAsync 結束 → IsLoading = false（IsGlobalLoading 仍為 true）
-         ↓
-     Home.razor HandleDataStateChanged 觸發 → 完成 DB 讀取 → SetGlobalLoading(false)（遮罩關閉）
+C:\Users\{username}\AppData\Local\Packages\com.companyname.pccustomizer_cgsmvjbq0fw2p\LocalState\PCCustomizer.db3
 ```
 
-- `DataService.IsGlobalLoading`（預設 `true`）：控制 `LoadingOverlay` 元件的顯示
-- `DataService.IsLoading`：僅用於 UI 按鈕 disabled（避免重複觸發 SeedData）
-- `DataService.LoadingMessage`：遮罩上顯示的文字，透過 `SetGlobalLoading` 一起設定
-- `DataService.SetGlobalLoading(bool value, string message)`：**唯一正確的遮罩開關方式**，同時設定狀態與訊息文字
-- `LoadingOverlay` 是獨立元件，直接訂閱 `DataService.OnStateChanged`，**不會觸發整個 Layout 重新渲染**
+### Entity Relationships
 
-### 觸發遮罩的場景
-
-| 場景 | 開啟遮罩 | 訊息 | 關閉遮罩 |
-|------|---------|------|---------|
-| 啟動 / 手動更新資料 | `SeedDataIfNeededAsync` 內部（直接設 `IsGlobalLoading = true`） | 預設「更新原價屋資訊中...」 | `Home.razor` 的 `UpdateData()` 或 `HandleDataStateChanged()` 呼叫 `SetGlobalLoading(false)` |
-| 切換主分類 | `Home.razor` 的 `OnSelectedCategoryChanged` 呼叫 `SetGlobalLoading(true, "商品資訊載入中...")` | "商品資訊載入中..." | 同一方法最後呼叫 `SetGlobalLoading(false)` |
-
-> **注意**：`SeedDataIfNeededAsync` 的 `finally` 只關閉 `IsLoading`，**不關閉 `IsGlobalLoading`**。
-> 關閉全域遮罩的責任在 `Home.razor`，不是 `DataService`。
+- `Category` 1 → N `Subcategory` (Cascade Delete)
+- `Subcategory` 1 → N `Product` (linked via `SubcategoryName` string)
+- `MenuCategory` 1 → N `MenuProduct` (Cascade Delete)
+- `MenuProduct` stores snapshot strings (`CategoryName`, `ProductName`, etc.) — not foreign keys to products
 
 ---
 
-## 6. 編寫 Razor 元件的規範
+## 5. Global Loading Overlay
 
-1. **所有頁面元件繼承 `BaseComponent`**，自動取得 `NotificationService` 與 `OpenExternalLink` 方法
-2. **MainLayout 不繼承 `BaseComponent`**（它是 `LayoutComponentBase`），需自行處理相依服務
-3. 使用 `MudBlazor` 元件時，注意參數大小寫：`Class` 而非 `class`、`Style` 而非 `style`
-4. `MudSelect` 需要非同步操作時，使用 `Value` + `ValueChanged`，不可用 `@bind-Value`
-5. `DrawerVariant.Permanent` 在 MudBlazor 9 **不存在**，請使用 `DrawerVariant.Persistent`
-6. **側邊導覽 Drawer 採用 Mini Variant**：`DrawerVariant.Mini` + `OpenMiniOnHover="true"`，`_drawerOpen` 預設為 `false`（啟動時收合，滑鼠移入自動展開，移出自動收合），**禁止改回 Persistent 或 Temporary**
+```
+App start → MainLayout.OnInitializedAsync → DataService.SeedDataIfNeededAsync()
+               ↓
+           SeedDataIfNeededAsync starts → IsLoading = true; IsGlobalLoading = true (overlay shown)
+               ↓
+           SeedDataIfNeededAsync ends → IsLoading = false (IsGlobalLoading still true)
+               ↓
+           Home.razor HandleDataStateChanged fires → DB read complete → SetGlobalLoading(false) (overlay hidden)
+```
 
----
+- `DataService.IsGlobalLoading` (default `true`): controls `LoadingOverlay` component visibility
+- `DataService.IsLoading`: used only to disable UI buttons (prevents duplicate SeedData triggers)
+- `DataService.LoadingMessage`: text displayed on the overlay; set together via `SetGlobalLoading`
+- `DataService.SetGlobalLoading(bool value, string message)`: **the only correct way to control the overlay**
+- `LoadingOverlay` is a standalone component that subscribes directly to `DataService.OnStateChanged` — it does **not** trigger a full Layout re-render
 
-## 7. 已知技術債（待處理）
+### Overlay Trigger Scenarios
 
-| # | 問題 | 位置 | 說明 |
-|---|------|------|------|
-| M-08 | `AddMenuProduct` 有 5-6 次獨立 DB 查詢 | `MenuService.cs:89` | 單次使用者互動觸發，效能影響有限 |
-| P-01 | `HardwareService` 快取非原子性 | `HardwareService.cs` | 多元件同時呼叫可能觸發多次掃描，建議用 `SemaphoreSlim` |
-| P-02 | `GetCategoriesWithDetailsAsync` 全量載入 | `CategoryService.cs` | 每次都載入全部商品，資料量大時為效能瓶頸 |
-| S-01 | GitHub API 匿名請求速率限制 | `UpdateCheckService.cs` | 60 次/小時，建議快取上次檢查時間 |
+| Scenario | Open Overlay | Message | Close Overlay |
+|----------|-------------|---------|---------------|
+| App startup / manual data refresh | Inside `SeedDataIfNeededAsync` (sets `IsGlobalLoading = true` directly) | Default: "更新原價屋資訊中..." | `Home.razor` `UpdateData()` or `HandleDataStateChanged()` calls `SetGlobalLoading(false)` |
+| Switch main category | `Home.razor` `OnSelectedCategoryChanged` calls `SetGlobalLoading(true, "商品資訊載入中...")` | "商品資訊載入中..." | Same method calls `SetGlobalLoading(false)` at the end |
 
----
-
-## 8. 禁止事項
-
-- **禁止在 Singleton 服務中直接注入 Scoped 服務**（會造成 Captive Dependency 問題）
-- **禁止使用 `DrawerVariant.Permanent`**（MudBlazor 9 不支援）
-- **禁止修改 Model 欄位後不提醒使用者刪除 DB 檔案**
-- **禁止在 `BaseComponent` 子類別中重複注入 `INotificationService`**（基底類別已注入）
-- **禁止在 `MainLayout` 中繼承 `BaseComponent`**（`LayoutComponentBase` 不相容）
-- **NavMenu.razor 已移除**，側邊導覽請使用 `MyNavMenu.razor`
-- **禁止直接設定 `IsGlobalLoading`**（屬性為 `private set`），一律改用 `DataService.SetGlobalLoading(bool, string)` 控制遮罩
-- **禁止在 `DataService.SeedDataIfNeededAsync` 的 `finally` 中關閉全域遮罩**，關閉遮罩的責任在 `Home.razor`
+> **Note**: The `finally` block in `SeedDataIfNeededAsync` only closes `IsLoading`, **not `IsGlobalLoading`**.
+> Responsibility for closing the global overlay belongs to `Home.razor`, not `DataService`.
 
 ---
 
-## 9. 常見 Agent 操作場景
+## 6. Razor Component Rules
 
-### 新增一個 Service
+1. **All page components must inherit `BaseComponent`** — automatically provides `NotificationService` and `OpenExternalLink`
+2. **`MainLayout` must NOT inherit `BaseComponent`** — it extends `LayoutComponentBase`, which is incompatible
+3. When using MudBlazor components, use PascalCase parameters: `Class` not `class`, `Style` not `style`
+4. For async operations on `MudSelect`, use `Value` + `ValueChanged` — do NOT use `@bind-Value`
+5. `DrawerVariant.Permanent` does **not exist** in MudBlazor 9 — use `DrawerVariant.Persistent`
+6. **Sidebar drawer uses Mini Variant**: `DrawerVariant.Mini` + `OpenMiniOnHover="true"`, `_drawerOpen` defaults to `false` (collapsed on start, auto-expands on hover, auto-collapses on mouse-out). **Do not revert to Persistent or Temporary.**
 
-1. 建立 `Services/IXxxService.cs` 介面
-2. 建立 `Services/XxxService.cs` 實作
-3. 在 `MauiProgram.cs` 的服務註冊區加入 DI 設定
-4. 確認生命週期是否與依賴項目相符（避免 Captive Dependency）
+---
 
-### 新增一個頁面
+## 7. Known Technical Debt
 
-1. 在 `Components/Pages/` 建立 `Xxx.razor`
-2. 加上 `@page "/xxx"` 路由指令
-3. 繼承 `@inherits BaseComponent`
-4. 在 `MyNavMenu.razor` 加入對應的 `MudNavLink`
+| # | Issue | Location | Notes |
+|---|-------|----------|-------|
+| M-08 | `AddMenuProduct` makes 5–6 separate DB queries | `MenuService.cs:89` | Triggered per user interaction; limited performance impact |
+| P-01 | `HardwareService` cache is non-atomic | `HardwareService.cs` | Concurrent calls may trigger multiple scans; consider `SemaphoreSlim` |
+| P-02 | `GetCategoriesWithDetailsAsync` loads all products | `CategoryService.cs` | Full load every call; potential bottleneck with large datasets |
+| S-01 | GitHub API anonymous rate limit | `UpdateCheckService.cs` | 60 req/hr; consider caching last-checked timestamp |
 
-### 修改 EF Core Model
+---
 
-1. 修改 `Models/` 下的對應 Model
-2. **必須提醒使用者刪除本機 PCCustomizer.db3**
-3. 在 `AppDbContext.cs` 更新 `OnModelCreating` 的 Fluent API 設定（如有必要）
+## 8. Prohibited Actions
+
+- **Do NOT inject Scoped services directly into Singleton services** (causes Captive Dependency)
+- **Do NOT use `DrawerVariant.Permanent`** (not supported in MudBlazor 9)
+- **Do NOT modify Model fields without warning the user to delete the DB file**
+- **Do NOT re-inject `INotificationService` in `BaseComponent` subclasses** (already injected by base)
+- **Do NOT inherit `BaseComponent` in `MainLayout`** (incompatible with `LayoutComponentBase`)
+- **`NavMenu.razor` has been removed** — use `MyNavMenu.razor` for all navigation
+- **Do NOT set `IsGlobalLoading` directly** (property has `private set`) — always use `DataService.SetGlobalLoading(bool, string)`
+- **Do NOT close the global overlay inside `DataService.SeedDataIfNeededAsync`'s `finally` block** — overlay close responsibility belongs to `Home.razor`
+
+---
+
+## 9. Common Agent Workflows
+
+### Add a New Service
+
+1. Create `Services/IXxxService.cs` interface
+2. Create `Services/XxxService.cs` implementation
+3. Register in `MauiProgram.cs` with correct lifetime
+4. Verify lifetime is compatible with all dependencies (avoid Captive Dependency)
+
+### Add a New Page
+
+1. Create `Components/Pages/Xxx.razor`
+2. Add `@page "/xxx"` route directive
+3. Add `@inherits BaseComponent`
+4. Add a corresponding `MudNavLink` in `MyNavMenu.razor`
+
+### Modify an EF Core Model
+
+1. Update the relevant model in `Models/`
+2. **Warn the user to delete the local PCCustomizer.db3**
+3. Update `OnModelCreating` Fluent API config in `AppDbContext.cs` if needed
