@@ -13,5 +13,8 @@ namespace PCCustomizer.Models.Hardware
     {
         public required string Model { get; set; }
         public double SizeGb { get; set; }
+        // LHM sensor fields (null = admin not granted or sensor unavailable)
+        public float? TemperatureCelsius { get; set; }
+        public float? SmartLifeRemainingPercent { get; set; }
     }
 }

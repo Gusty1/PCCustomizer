@@ -14,5 +14,8 @@ namespace PCCustomizer.Models.Hardware
         public required string Name { get; set; }
         public double AdapterRamGb { get; set; }
         public required string DriverVersion { get; set; }
+        // LHM sensor fields (null = admin not granted or sensor unavailable)
+        public float? TemperatureCelsius { get; set; }
+        public float? LoadPercent { get; set; }
     }
 }

@@ -22,5 +22,12 @@ namespace PCCustomizer.Models.Hardware
         public List<GpuInfo>? Gpus { get; set; } = [];
         public List<RamStickInfo>? RamSticks { get; set; } = [];
         public List<DiskInfo>? Disks { get; set; } = [];
+        // LHM sensor fields (null = admin not granted or sensor unavailable)
+        public float? CpuTemperatureCelsius { get; set; }
+        public float? CpuLoadPercent { get; set; }
+        public List<float> CpuCoreClocksMhz { get; set; } = [];
+        public float? RamUsedGb { get; set; }
+        public float? RamAvailableGb { get; set; }
+        public List<(string Name, float Rpm)> FanSpeeds { get; set; } = [];
     }
 }

@@ -83,6 +83,7 @@
         <PackageReference Include="MudBlazor" Version="9.0.0" />
         <PackageReference Include="MudBlazor.ThemeManager" Version="4.0.0" />
         <PackageReference Include="System.Management" Version="10.0.3" />
+        <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
         <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.3" />
     </ItemGroup>
 
