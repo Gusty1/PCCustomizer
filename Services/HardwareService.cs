@@ -229,7 +229,7 @@ namespace PCCustomizer.Services
     }
 
     /// <summary>LHM 標準 Visitor，呼叫 Accept 前必須先套用以更新感測器值。</summary>
-    file sealed class UpdateVisitor : IVisitor
+    internal sealed class UpdateVisitor : IVisitor
     {
         public void VisitComputer(IComputer computer) => computer.Traverse(this);
         public void VisitHardware(IHardware hardware)
